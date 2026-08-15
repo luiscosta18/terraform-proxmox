@@ -1,44 +1,79 @@
-# VM creation using proxmox_vm_qemu (common provider resource name used by community provider)
+# VM creation using bpg/proxmox resource proxmox_virtual_environment_vm
 # This resource block will be created only if create_vms = true
 
-resource "proxmox_vm_qemu" "vm" {
+resource "proxmox_virtual_environment_vm" "vm" {
   for_each = var.create_vms ? { for v in var.vms : v.name => v } : {}
 
-  name   = each.value.name
-  vmid   = lookup(each.value, "vmid", null)
-  cores  = lookup(each.value, "cores", 2)
-  memory = lookup(each.value, "memory", 2048)
+  name      = each.value.name
+  node_name = lookup(each.value, "node_name", null)
+  vm_id     = lookup(each.value, "vmid", null)
 
-  # Disk - use cloudinit disk + main disk
-  disk {
-    type    = "scsi"
-    storage = lookup(each.value, "storage", "local-lvm")
-    size    = format("%dg", lookup(each.value, "disk_gb", 10))
-    format  = "qcow2"
+  # CPU & memory
+  cpu {
+    cores = lookup(each.value, "cores", 1)
+    # type can be set via nested map in future
   }
 
-  # Network
-  network {
-    model = "virtio"
-    bridge = "vmbr0"
-    % if each.value.net0 != null
-    # Allow passing net0 string like "virtio=XX:XX:XX:XX:XX,bridge=vmbr0"
-    % endif
+  memory {
+    dedicated = lookup(each.value, "memory", 2048)
+    floating  = lookup(each.value, "memory", 2048)
   }
 
-  # Cloud-init / SSH keys
-  sshkeys = join("\n", lookup(each.value, "ssh_keys", []))
-  ciuser  = lookup(each.value, "user", "ubuntu")
-  cipassword = lookup(each.value, "password", null)
+  # Disks: prefer detailed disks list, fallback to simple disk_gb+storage
+  dynamic "disk" {
+    for_each = length(lookup(each.value, "disks", [])) > 0 ? lookup(each.value, "disks", []) : [
+      {
+        datastore_id = lookup(each.value, "storage", "local-lvm")
+        size_gb = lookup(each.value, "disk_gb", 10)
+        interface = "scsi0"
+        file_format = "qcow2"
+      }
+    ]
 
-  # Optional template (cloud-init ready image) to clone from
-  clone = lookup(each.value, "template", null)
+    content {
+      datastore_id   = lookup(disk.value, "datastore_id", null)
+      size           = tostring(lookup(disk.value, "size_gb", 10))
+      interface      = lookup(disk.value, "interface", "scsi0")
+      file_format    = lookup(disk.value, "file_format", null)
+      cache          = lookup(disk.value, "cache", null)
+      import_from    = lookup(disk.value, "import_from", null)
+      file_id        = lookup(disk.value, "file_id", null)
+      backup         = lookup(disk.value, "backup", null)
+    }
+  }
 
-  agent = 1
+  # Network devices
+  dynamic "network_device" {
+    for_each = lookup(each.value, "networks", [])
+    content {
+      bridge = lookup(network_device.value, "bridge", "vmbr0")
+      model  = lookup(network_device.value, "model", "virtio")
+      hwaddr = lookup(network_device.value, "hwaddr", null)
+      tag    = lookup(network_device.value, "tag", null)
+    }
+  }
 
-  # Tags as a custom attribute map if provider supports it
+  # Initialization (cloud-init)
+  initialization {
+    user_account {
+      username = lookup(each.value, "user", "ubuntu")
+      password = lookup(each.value, "password", null)
+      keys     = lookup(each.value, "ssh_keys", [])
+    }
+    # Optionally pass user_data_file_id from a created file resource
+    # user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
+  }
+
+  # Tags
+  tags = lookup(each.value, "tags", [])
+
+  # Agent settings
+  agent {
+    enabled = lookup(each.value, "agent_enabled", false)
+  }
+
   lifecycle {
-    ignore_changes = [sshkeys]
+    ignore_changes = [initialization]
   }
 
   provisioner "local-exec" {

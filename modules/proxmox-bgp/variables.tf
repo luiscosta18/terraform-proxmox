@@ -40,19 +40,37 @@ variable "create_vms" {
 }
 
 variable "vms" {
-  description = "List of VMs to create using the proxmox provider. Each VM: name, vmid (optional), cores, memory, disk_gb, storage, template, ssh_keys (list), user, password, net0"
+  description = "List of VMs to create using the proxmox provider. Each VM supports detailed disk and network configuration or a simple disk_gb/storage shortcut."
   type = list(object({
     name      = string
     vmid      = optional(number)
     cores     = optional(number)
     memory    = optional(number)
+    # simple disk shortcut
     disk_gb   = optional(number)
     storage   = optional(string)
+    # detailed disks
+    disks = optional(list(object({
+      datastore_id = optional(string)
+      size_gb = optional(number)
+      interface = optional(string)
+      file_format = optional(string)
+      cache = optional(string)
+      import_from = optional(string)
+      file_id = optional(string)
+      backup = optional(bool)
+    })))
     template  = optional(string)
     ssh_keys  = optional(list(string))
     user      = optional(string)
     password  = optional(string)
-    net0      = optional(string)
+    # networks: list of maps { bridge = "vmbr0", model = "virtio" }
+    networks = optional(list(object({
+      bridge = optional(string)
+      model = optional(string)
+      tag = optional(number)
+      hwaddr = optional(string)
+    })))
     tags      = optional(map(string))
   }))
   default = []
