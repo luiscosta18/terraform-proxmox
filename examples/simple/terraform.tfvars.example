@@ -1,0 +1,49 @@
+# example terraform.tfvars for examples/simple
+proxmox_endpoint = "https://proxmox.example.local:8006"
+proxmox_username = "root@pam"
+proxmox_password = "REPLACE_WITH_SECRET"
+
+bgp_peers = []
+
+tags = {
+  environment = "stg"
+  service     = "web"
+  product     = "myproduct"
+  team        = "netops"
+  region      = "eu-west-1"
+  project     = "proxmox-test"
+  owner       = "netops"
+}
+
+create_vms = true
+
+vms = [
+  {
+    name = "web-01"
+    vmid = 110
+    cores = 2
+    memory = 4096
+    disks = [
+      {
+        datastore_id = "local-lvm"
+        size_gb = 20
+        interface = "scsi0"
+        file_format = "qcow2"
+      },
+      {
+        datastore_id = "local-lvm"
+        size_gb = 50
+        interface = "scsi1"
+        file_format = "qcow2"
+      }
+    ]
+    networks = [
+      { bridge = "vmbr0", model = "virtio", tag = 100 }
+    ]
+    template = "ubuntu-22.04-cloudinit"
+    ssh_keys = ["ssh-rsa AAAAB3NzaC1... user@example.com"]
+    user = "ubuntu"
+    password = "REPLACE_WITH_SECRET"
+    tags = { role = "web" }
+  }
+]
