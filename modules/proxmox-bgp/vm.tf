@@ -1,7 +1,7 @@
 # VM creation using bpg/proxmox resource proxmox_virtual_environment_vm
 # This resource block will be created only if create_vms = true
 
-resource "proxmox_virtual_environment_vm" "vm" {
+resource "proxmox_vm" "vm" {
   for_each = var.create_vms ? { for v in var.vms : v.name => v } : {}
 
   name      = each.value.name
