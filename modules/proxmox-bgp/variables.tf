@@ -32,3 +32,28 @@ variable "proxmox_hosts" {
   }))
   default = []
 }
+
+variable "create_vms" {
+  description = "Whether to create VMs"
+  type        = bool
+  default     = false
+}
+
+variable "vms" {
+  description = "List of VMs to create using the proxmox provider. Each VM: name, vmid (optional), cores, memory, disk_gb, storage, template, ssh_keys (list), user, password, net0"
+  type = list(object({
+    name      = string
+    vmid      = optional(number)
+    cores     = optional(number)
+    memory    = optional(number)
+    disk_gb   = optional(number)
+    storage   = optional(string)
+    template  = optional(string)
+    ssh_keys  = optional(list(string))
+    user      = optional(string)
+    password  = optional(string)
+    net0      = optional(string)
+    tags      = optional(map(string))
+  }))
+  default = []
+}
