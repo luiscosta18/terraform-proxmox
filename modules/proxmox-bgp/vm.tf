@@ -64,8 +64,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
     # user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
   }
 
-  # Tags
-  tags = lookup(each.value, "tags", [])
+  # Tags: merge module-level tags and per-VM tags and convert to provider-friendly list of "key=value" strings
+  tags = [for k,v in merge(var.tags, lookup(each.value, "tags", {})) : "${k}=${v}"]
 
   # Agent settings
   agent {
