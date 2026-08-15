@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">=1.15"
+  required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">=0.111"
+    }
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "vm" {
   for_each = var.create_vms ? local.vm_map : {}
 
