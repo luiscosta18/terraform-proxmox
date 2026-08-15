@@ -19,7 +19,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.15.8
 
       - name: Terraform init
         working-directory: ./examples/simple
@@ -40,4 +40,4 @@ jobs:
 
       - name: Print notice
         run: |
-          echo "Note: validate may fail without provider credentials; this CI ensures syntax/format correctness. Provide secrets in repo settings to run full plan." 
+          echo "Note: validate may fail without provider credentials; this CI ensures syntax/format correctness. Provide secrets in repo settings to run full plan."
