@@ -6,8 +6,13 @@ proxmox_password = "REPLACE_WITH_SECRET"
 bgp_peers = []
 
 tags = {
-  project = "proxmox-test"
-  owner   = "netops"
+  environment = "stg"
+  service     = "web"
+  product     = "myproduct"
+  team        = "netops"
+  region      = "eu-west-1"
+  project     = "proxmox-test"
+  owner       = "netops"
 }
 
 create_vms = true

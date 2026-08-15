@@ -20,6 +20,11 @@ variable "tags" {
   description = "Global tags to attach to resources managed by this module"
   type        = map(string)
   default     = {}
+
+  validation {
+    condition = alltrue([for k in ["environment","service","product","team","region"] : contains(keys(var.tags), k)]) && contains(["stg","int","prd"], var.tags["environment"])
+    error_message = "tags must include keys: environment (one of stg,int,prd), service, product, team, region. Set them at module level or provide per-VM tags."
+  }
 }
 
 variable "proxmox_hosts" {
@@ -74,4 +79,14 @@ variable "vms" {
     tags      = optional(map(string))
   }))
   default = []
+
+  validation {
+    condition = length(var.vms) == 0 ? true : alltrue([
+      for v in var.vms : (
+        alltrue([for k in ["environment","service","product","team","region"] : contains(keys(merge(var.tags, lookup(v, "tags", {}))), k)])
+        && contains(["stg","int","prd"], lookup(merge(var.tags, lookup(v, "tags", {})), "environment"))
+      )
+    ])
+    error_message = "Each VM's tags (merged with module tags) must include keys: environment (one of stg,int,prd), service, product, team, region. Provide tags at module level or per-VM."
+  }
 }
