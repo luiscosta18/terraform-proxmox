@@ -21,7 +21,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Environment**
  - OS: [e.g. Ubuntu 22.04]
- - Terraform version: [e.g. 1.5.0]
+ - Terraform version: [e.g. 1.15]
  - Provider version: [e.g. bpg/proxmox 0.111.1]
 
 **Additional context**
