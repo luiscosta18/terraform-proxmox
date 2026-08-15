@@ -1,27 +1,83 @@
-// Module: proxmox-bgp
-// This module is a scaffold for configuring BGP on Proxmox using the bpg/proxmox provider.
-// IMPORTANT: Do not declare provider blocks inside modules in general; pass provider configuration from root module.
+resource "proxmox_virtual_environment_vm" "vm" {
+  for_each = var.create_vms ? local.vm_map : {}
 
-locals {
-  merged_tags = var.tags
-}
+  name      = each.value.name
+  node_name = lookup(each.value, "node_name", null)
+  vm_id     = lookup(each.value, "vmid", null)
 
-# Example placeholder: loop over peers and create resources. Replace the null_resource with
-# the real provider resource (e.g. proxmox_bgp_neighbor or similar) from the upstream provider.
+  cpu {
+    cores = lookup(each.value, "cores", 1)
+  }
 
-resource "null_resource" "bgp_peer" {
-  for_each = var.bgp_enabled ? { for p in var.bgp_peers : p.name => p } : {}
+  memory {
+    dedicated = lookup(each.value, "memory", 2048)
+    floating  = lookup(each.value, "memory", 2048)
+  }
 
-  triggers = {
-    name        = each.value.name
-    remote_as   = tostring(each.value.remote_as)
-    remote_addr = each.value.remote_addr
+  dynamic "disk" {
+    for_each = length(lookup(each.value, "disks", [])) > 0 ? lookup(each.value, "disks", []) : [
+      {
+        datastore_id = lookup(each.value, "storage", "local-lvm")
+        size_gb      = lookup(each.value, "disk_gb", 10)
+        interface    = "scsi0"
+        file_format  = "qcow2"
+      }
+    ]
+
+    content {
+      datastore_id = lookup(disk.value, "datastore_id", null)
+      size         = lookup(disk.value, "size_gb", 10)
+      interface    = lookup(disk.value, "interface", "scsi0")
+      file_format  = lookup(disk.value, "file_format", null)
+
+      import_from = lookup(disk.value, "import_from", null)
+      file_id     = lookup(disk.value, "file_id", null)
+
+      discard  = lookup(disk.value, "discard", null)
+      iothread = lookup(disk.value, "iothread", null)
+      ssd      = lookup(disk.value, "ssd", null)
+    }
+  }
+
+  dynamic "network_device" {
+    for_each = lookup(each.value, "networks", [])
+
+    content {
+      bridge = lookup(network_device.value, "bridge", "vmbr0")
+      model  = lookup(network_device.value, "model", "virtio")
+
+      mac_address = lookup(network_device.value, "mac_address", null)
+      vlan_id     = lookup(network_device.value, "vlan_id", null)
+    }
+  }
+
+  initialization {
+    user_account {
+      username = lookup(each.value, "user", "ubuntu")
+      password = lookup(each.value, "password", null)
+      keys     = lookup(each.value, "ssh_keys", [])
+    }
+  }
+
+  tags = [
+    for k, v in merge(
+      var.tags,
+      lookup(each.value, "tags", {})
+    ) : "${k}=${v}"
+  ]
+
+  agent {
+    enabled = lookup(each.value, "agent_enabled", false)
+  }
+
+  lifecycle {
+    ignore_changes = [
+      initialization
+    ]
   }
 
   provisioner "local-exec" {
-    when    = "create"
-    command = "echo Configuring BGP peer ${each.value.name} to ${each.value.remote_addr}"
+    when    = create
+    command = "echo Created VM ${each.value.name}"
   }
 }
-
-# Attach tags as outputs so calling code can reference them
