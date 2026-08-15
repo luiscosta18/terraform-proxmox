@@ -39,6 +39,17 @@ variable "create_vms" {
   default     = false
 }
 
+variable "implementation" {
+  description = "Which VM resource implementation to use: 'stable' uses proxmox_virtual_environment_vm, 'experimental' uses proxmox_vm (provider experimental)."
+  type        = string
+  default     = "stable"
+
+  validation {
+    condition     = contains(["stable","experimental"], var.implementation)
+    error_message = "implementation must be one of: 'stable' or 'experimental'"
+  }
+}
+
 variable "vms" {
   description = "List of VMs to create using the proxmox provider. Each VM supports detailed disk and network configuration or a simple disk_gb/storage shortcut."
   type = list(object({
