@@ -2,11 +2,15 @@ name: Create release on push to main
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -14,26 +18,22 @@ jobs:
       - name: Determine release tag
         id: tag
         run: |
-          # Create a deterministic tag using date+short SHA
+          # Create a deterministic tag using date + short SHA
           DATE=$(date -u +"%Y.%m.%d")
           SHA=$(git rev-parse --short=8 HEAD)
-          echo "TAG=v${DATE}-${SHA}" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.TAG }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "TAG=v${DATE}-${SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Package module
         run: |
-          git archive --format=zip --output=terraform-proxmox-${{ steps.tag.outputs.TAG }}.zip HEAD
+          git archive \
+            --format=zip \
+            --output="terraform-proxmox-${{ steps.tag.outputs.TAG }}.zip" \
+            HEAD
 
-      - name: Upload release asset
-        uses: softprops/gh-release@v1
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
+          files: terraform-proxmox-${{ steps.tag.outputs.TAG }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
