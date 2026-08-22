@@ -1,93 +1,141 @@
 terraform {
-  required_version = ">=1.15"
+  required_version = ">= 1.15"
+
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = ">=0.111"
+      version = ">= 0.111"
     }
   }
 }
 
-resource "proxmox_virtual_environment_vm" "vm" {
-  for_each = var.create_vms ? local.vm_map : {}
+resource "proxmox_download_file" "cloud_image" {
+  content_type = "import"
+  datastore_id = var.vm.image_datastore_id
+  node_name    = var.vm.node_name
 
-  name      = each.value.name
-  node_name = lookup(each.value, "node_name", null)
-  vm_id     = lookup(each.value, "vmid", null)
+  url = var.vm.image_url
+
+  file_name = format(
+    "%s.qcow2",
+    var.vm.name
+  )
+}
+
+resource "proxmox_virtual_environment_file" "cloud_init" {
+  for_each = try(var.vm.cloud_init.enabled, false) ? { enabled = true } : {}
+
+  content_type = "snippets"
+  datastore_id = try(var.vm.cloud_init.datastore_id, "local")
+  node_name    = var.vm.node_name
+
+  source_raw {
+    file_name = format(
+      "%s-cloud-init.yaml",
+      var.vm.name
+    )
+
+    data = templatefile(
+      format(
+        "%s/cloudinit.tpl",
+        path.module
+      ),
+      {
+        hostname = var.vm.name
+        user     = var.vm.user
+        password = var.vm.password
+      }
+    )
+  }
+}
+
+resource "proxmox_virtual_environment_vm" "vm" {
+  name      = var.vm.name
+  node_name = var.vm.node_name
+  vm_id     = var.vm.vmid
+
+  machine = var.vm.machine
+  bios    = var.vm.bios
+
+  operating_system {
+    type = var.vm.os_type
+  }
+
+  on_boot = true
+  started = true
+
+  acpi          = true
+  tablet_device = true
 
   cpu {
-    cores = lookup(each.value, "cores", 1)
+    cores   = var.vm.cores
+    sockets = 1
   }
 
   memory {
-    dedicated = lookup(each.value, "memory", 2048)
-    floating  = lookup(each.value, "memory", 2048)
+    dedicated = var.vm.memory
+    floating  = var.vm.memory
   }
 
-  dynamic "disk" {
-    for_each = length(lookup(each.value, "disks", [])) > 0 ? lookup(each.value, "disks", []) : [
-      {
-        datastore_id = lookup(each.value, "storage", "local-lvm")
-        size_gb      = lookup(each.value, "disk_gb", 10)
-        interface    = "scsi0"
-        file_format  = "qcow2"
-      }
-    ]
+  disk {
+    datastore_id = var.vm.storage
 
-    content {
-      datastore_id = lookup(disk.value, "datastore_id", null)
-      size         = lookup(disk.value, "size_gb", 10)
-      interface    = lookup(disk.value, "interface", "scsi0")
-      file_format  = lookup(disk.value, "file_format", null)
+    import_from = proxmox_download_file.cloud_image.id
 
-      import_from = lookup(disk.value, "import_from", null)
-      file_id     = lookup(disk.value, "file_id", null)
+    interface = "virtio0"
+    size      = var.vm.disk_gb
 
-      discard  = lookup(disk.value, "discard", null)
-      iothread = lookup(disk.value, "iothread", null)
-      ssd      = lookup(disk.value, "ssd", null)
-    }
+    iothread = true
+    discard  = "on"
   }
 
   dynamic "network_device" {
-    for_each = lookup(each.value, "networks", [])
+    for_each = var.vm.networks
 
     content {
-      bridge = lookup(network_device.value, "bridge", "vmbr0")
-      model  = lookup(network_device.value, "model", "virtio")
-
-      mac_address = lookup(network_device.value, "mac_address", null)
-      vlan_id     = lookup(network_device.value, "vlan_id", null)
+      bridge      = network_device.value.bridge
+      model       = try(network_device.value.model, "virtio")
+      mac_address = try(network_device.value.mac_address, null)
+      vlan_id     = try(network_device.value.vlan_id, null)
     }
   }
 
-  initialization {
-    user_account {
-      username = lookup(each.value, "user", "ubuntu")
-      password = lookup(each.value, "password", null)
-      keys     = lookup(each.value, "ssh_keys", [])
+  dynamic "initialization" {
+    for_each = try(var.vm.cloud_init.enabled, false) ? { enabled = true } : {}
+
+    content {
+      user_data_file_id = proxmox_virtual_environment_file.cloud_init["enabled"].id
+
+      ip_config {
+        ipv4 {
+          address = "dhcp"
+        }
+      }
     }
   }
 
   tags = [
     for k, v in merge(
-      var.tags,
-      lookup(each.value, "tags", {})
-    ) : "${k}=${v}"
+      try(var.tags, {}),
+      try(var.vm.tags, {})
+    ) :
+    format(
+      "%s-%s",
+      k,
+      v
+    )
   ]
 
   agent {
-    enabled = lookup(each.value, "agent_enabled", false)
-  }
-
-  lifecycle {
-    ignore_changes = [
-      initialization
-    ]
+    enabled = var.vm.agent_enabled
   }
 
   provisioner "local-exec" {
-    when    = create
-    command = "echo Created VM ${each.value.name}"
+    when = create
+
+    command = format(
+      "echo Created VM %s",
+      var.vm.name
+    )
   }
 }
