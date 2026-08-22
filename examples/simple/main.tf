@@ -1,5 +1,5 @@
 module "proxmox_bgp" {
-  source = "/home/lcosta/work/terraform-proxmox/modules/proxmox-bgp"
+  source = "../../modules/proxmox-bgp"
 
   for_each = local.vm_map
 
