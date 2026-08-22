@@ -1,4 +1,4 @@
-# Proxmox BGP VM Module
+# Proxmox BPG VM Module
 
 Terraform module for creating Proxmox VMs using the
 `bpg/proxmox` provider.
