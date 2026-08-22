@@ -1,28 +1,29 @@
-Contribution guide — terraform-proxmox module
+# Contributing
 
-Goals
-- Maintain a small, testable module that follows Terraform module best practices.
-- Keep provider configuration out of modules; provide examples that configure providers.
-- Ensure CI checks formatting and validation on PRs.
+Contribution guide for the `terraform-proxmox` project.
 
-Development workflow
-1. Fork or branch from main.
-2. Implement changes in modules/ or examples/ with small focused commits.
-3. Update README and CHANGELOG for user-facing changes.
-4. Run `make fmt` and `make validate` locally before opening a PR.
+## Goals
 
-Repository conventions
-- Modules must be idempotent and provider-agnostic.
-- No secrets in the repo. Use environment variables or CI secrets for credentials.
-- Examples live under examples/* and must demonstrate minimum viable configuration.
+- Keep modules small, reusable, and testable.
+- Follow Terraform module best practices.
+- Keep provider configuration outside reusable modules.
+- Keep resources configurable through module inputs.
+- Maintain clear documentation and examples.
+- Ensure CI passes before merging changes.
 
-Testing & CI
-- CI will run terraform fmt and validate on PRs and pushes to main.
-- Integration tests that require access to a Proxmox instance should be run manually or in a secure CI with credentials.
+## Development Workflow
 
-Releases
-- Use semantic versioning. Merges to main will trigger the release workflow which creates a release tag and artifact.
-- Update CHANGELOG.md with notable changes before merging.
+1. Fork the repository or create a branch from `main`.
+2. Make focused changes under `modules/` or `examples/`.
+3. Keep commits small and descriptive.
+4. Update documentation when changing module behavior.
+5. Update `CHANGELOG.md` for user-facing changes.
+6. Run the required checks locally before opening a PR.
 
-Contact
-- Open issues and PRs for questions or improvements.
+### Local Checks
+
+Run:
+
+```bash
+make fmt
+make validate
