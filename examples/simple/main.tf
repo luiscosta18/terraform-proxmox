@@ -1,5 +1,5 @@
-module "proxmox_bgp" {
-  source = "../../modules/proxmox-bppg"
+module "proxmox_bpg" {
+  source = "../../modules/proxmox-bpg"
 
   for_each = local.vm_map
 
