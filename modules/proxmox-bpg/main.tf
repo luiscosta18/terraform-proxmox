@@ -1,19 +1,15 @@
 resource "proxmox_download_file" "cloud_image" {
   content_type = "import"
 
-  datastore_id = var.vm.image_datastore_id
+  datastore_id = var.vm.image.datastore_id
   node_name    = var.vm.node_name
 
-  url       = var.vm.image_url
+  url = var.vm.image.url
+
   file_name = "${var.vm.name}.qcow2"
 
-  checksum = var.vm.image_checksum
-
-  checksum_algorithm = (
-    var.vm.image_checksum == null
-    ? null
-    : coalesce(var.vm.image_checksum_algorithm, "sha256")
-  )
+  checksum           = var.vm.image.checksum
+  checksum_algorithm = var.vm.image.checksum_algorithm
 
   overwrite = false
 }
@@ -23,7 +19,7 @@ resource "proxmox_virtual_environment_file" "cloud_init" {
 
   content_type = "snippets"
 
-  datastore_id = var.vm.cloud_init.datastore_id
+  datastore_id = var.vm.cloud_init.snippet_datastore_id
   node_name    = var.vm.node_name
 
   source_raw {
@@ -40,17 +36,12 @@ resource "proxmox_virtual_environment_file" "cloud_init" {
   }
 }
 
-resource "proxmox_virtual_environment_vm" "vm" {
+resource "proxmox_virtual_environment_vm" "this" {
   name        = var.vm.name
   description = var.vm.description
 
   node_name = var.vm.node_name
   vm_id     = var.vm.vmid
-
-  tags = [
-    for key, value in merge(var.tags, var.vm.tags) :
-    "${key}-${value}"
-  ]
 
   machine = var.vm.machine
   bios    = var.vm.bios
@@ -64,6 +55,11 @@ resource "proxmox_virtual_environment_vm" "vm" {
   protection = var.vm.protection
   acpi       = var.vm.acpi
 
+  tags = [
+    for key, value in var.vm.tags :
+    "${key}-${value}"
+  ]
+
   agent {
     enabled = var.vm.agent_enabled
 
@@ -74,8 +70,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   cpu {
-    cores   = var.vm.cores
-    sockets = var.vm.sockets
+    cores   = var.vm.cpu.cores
+    sockets = var.vm.cpu.sockets
   }
 
   memory {
@@ -83,13 +79,13 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   disk {
-    datastore_id = var.vm.storage
+    datastore_id = var.vm.disk.datastore_id
 
     import_from = proxmox_download_file.cloud_image.id
 
     interface = "virtio0"
 
-    size = var.vm.disk_gb
+    size = var.vm.disk.size
 
     iothread = true
     discard  = "on"
@@ -107,11 +103,10 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   dynamic "initialization" {
-    for_each = var.vm.cloud_init.enabled ? [1] : []
+    for_each = var.vm.cloud_init.enabled ? [true] : []
 
     content {
-      # The cloud-init disk itself lives with the VM disks.
-      datastore_id = var.vm.storage
+      datastore_id = var.vm.cloud_init.datastore_id
 
       dynamic "ip_config" {
         for_each = var.vm.networks
@@ -119,12 +114,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
         content {
           ipv4 {
             address = ip_config.value.ipv4.address
-
-            gateway = (
-              ip_config.value.ipv4.address == "dhcp"
-              ? null
-              : ip_config.value.ipv4.gateway
-            )
+            gateway = ip_config.value.ipv4.gateway
           }
 
           dynamic "ipv6" {
@@ -136,19 +126,13 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
             content {
               address = ipv6.value.address
-              gateway = ip_config.value.ipv6.gateway
+              gateway = ipv6.value.gateway
             }
           }
         }
       }
 
-      # Custom cloud-init snippet.
-      #
-      # Do NOT add user_account here because user_data_file_id
-      # and user_account are mutually exclusive.
-      user_data_file_id = (
-        proxmox_virtual_environment_file.cloud_init[0].id
-      )
+      user_data_file_id = proxmox_virtual_environment_file.cloud_init[0].id
     }
   }
 }
