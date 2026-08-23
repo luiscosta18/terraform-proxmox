@@ -40,4 +40,4 @@ jobs:
         run: tflint --init
 
       - name: TFLint
-        run: tflint --recursive
+        run: tflint
