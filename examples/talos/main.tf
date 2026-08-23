@@ -1,5 +1,5 @@
 module "talos" {
-  source = "/home/lcosta/work/terraform-proxmox/modules/talos"
+  source = "../../modules/talos"
 
   cluster = local.talos_cluster
   network = local.talos_network
