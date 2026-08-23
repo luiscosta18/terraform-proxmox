@@ -4,5 +4,5 @@ plugin "terraform" {
 }
 
 config {
-  module = true
+  call_module_type = true
 }
