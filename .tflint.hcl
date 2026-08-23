@@ -6,7 +6,3 @@ plugin "terraform" {
 config {
   module = true
 }
-
-ignore_module {
-  name = "examples/simple"
-}
