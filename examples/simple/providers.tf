@@ -1,5 +1,11 @@
 provider "proxmox" {
   endpoint  = "https://IP:8006"
   api_token = ""
-  insecure  = true
+
+  insecure = true
+
+  ssh {
+    agent    = true
+    username = "root"
+  }
 }

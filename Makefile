@@ -1,16 +1,17 @@
-.PHONY: fmt init validate package
+.PHONY: fmt fmt-check validate lint check
 
 fmt:
 	terraform fmt -recursive
 
-init:
-	( cd examples/simple && terraform init -input=false )
+fmt-check:
+	terraform fmt -recursive -check
 
 validate:
-	( cd examples/simple && terraform init -input=false && terraform validate )
+	terraform init -backend=false
+	terraform validate
 
-package:
-	git archive --format=zip --output=terraform-proxmox-$(shell git rev-parse --short=8 HEAD).zip HEAD
+lint:
+	tflint --init
+	tflint --recursive
 
-test-readme:
-	@echo "Run integration tests manually with credentials; see docs/structure.md"
+check: fmt-check validate lint

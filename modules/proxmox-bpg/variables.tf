@@ -1,48 +1,75 @@
+variable "tags" {
+  description = "Common tags applied to all virtual machines."
+
+  type = map(string)
+
+  default = {
+    environment = "dev"
+    managed_by  = "terraform"
+  }
+}
+
 variable "vm" {
+  description = "Virtual machine configuration."
 
   type = object({
-    name      = string
+    name        = string
+    description = optional(string, "Managed by Terraform")
+
     node_name = string
-    vmid      = number
+    vmid      = optional(number)
 
-    machine = string
-    bios    = string
-    os_type = optional(string, "l26")
+    machine = optional(string, "q35")
+    bios    = optional(string, "seabios")
 
-    agent_enabled = bool
+    operating_system_type = optional(string, "l26")
 
-    protection = optional(bool, false)
+    cores   = optional(number, 2)
+    sockets = optional(number, 1)
+    memory  = optional(number, 4096)
 
-    cores  = number
-    memory = number
+    storage = string
+    disk_gb = optional(number, 32)
 
-    storage            = string
     image_datastore_id = string
     image_url          = string
-    disk_gb            = number
 
-    user     = string
-    password = string
+    image_checksum = optional(string)
 
-    cloud_init = object({
-      enabled      = bool
-      datastore_id = string
-    })
+    image_checksum_algorithm = optional(string, "sha256")
+
+    on_boot    = optional(bool, true)
+    started    = optional(bool, true)
+    protection = optional(bool, false)
+    acpi       = optional(bool, true)
+
+    agent_enabled = optional(bool, true)
+
+    tags = optional(map(string), {})
 
     networks = list(object({
       bridge      = string
       model       = optional(string, "virtio")
       mac_address = optional(string)
-      vlan_id     = optional(number)
+      vlan_id     = optional(number, 0)
+
+      ipv4 = object({
+        address = string
+        gateway = optional(string)
+      })
+
+      ipv6 = optional(object({
+        address = string
+        gateway = string
+      }))
     }))
 
-    tags = optional(map(string), {})
+    cloud_init = object({
+      enabled      = optional(bool, true)
+      datastore_id = string
+
+      user     = string
+      ssh_keys = list(string)
+    })
   })
-}
-
-variable "tags" {
-  description = "Additional VM tags"
-
-  type    = map(string)
-  default = {}
 }
