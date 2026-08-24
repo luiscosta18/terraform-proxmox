@@ -4,8 +4,6 @@ Terraform modules for provisioning and managing virtual machines on [Proxmox VE]
 
 ## Usage
 
-The main reusable module is available in [`modules/proxmox-bpg`](./modules/proxmox-bpg).
-
 Examples are provided for common use cases:
 
 - [`single_vm`](./examples/single_vm) — provision a single virtual machine
