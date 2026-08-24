@@ -24,7 +24,6 @@ variable "controlplanes" {
   }
 }
 
-
 variable "workers" {
   description = "Talos worker VM inventory."
 
@@ -45,6 +44,8 @@ variable "workers" {
 }
 
 variable "cluster" {
+  description = "Talos/Kubernetes cluster configuration."
+
   type = object({
     name               = string
     endpoint           = string
@@ -54,7 +55,20 @@ variable "cluster" {
   })
 }
 
+variable "network" {
+  description = "Network configuration for the Talos cluster."
+
+  type = object({
+    cidr      = string
+    gateway   = string
+    vip       = string
+    interface = optional(string)
+  })
+}
+
 variable "proxmox" {
+  description = "Proxmox storage and network configuration."
+
   type = object({
     image_datastore = string
     disk_datastore  = string
@@ -63,6 +77,8 @@ variable "proxmox" {
 }
 
 variable "talos_image" {
+  description = "Talos installation image configuration."
+
   type = object({
     iso_url            = string
     installer_url      = string
@@ -90,15 +106,4 @@ variable "worker_config_patches" {
 
   type    = list(string)
   default = []
-}
-
-variable "network" {
-  description = "Network configuration for the Talos cluster."
-
-  type = object({
-    cidr      = string
-    gateway   = string
-    vip       = string
-    interface = string
-  })
 }

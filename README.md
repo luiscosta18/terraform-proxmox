@@ -1,30 +1,22 @@
-# Proxmox BPG VM Module
+# Terraform Proxmox
 
-Terraform module for creating Proxmox VMs using the
-`bpg/proxmox` provider.
+Terraform modules for provisioning and managing virtual machines on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment) using the [bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox/latest) provider.
 
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+## Usage
 
-No requirements.
+The main reusable module is available in [`modules/proxmox-bpg`](./modules/proxmox-bpg).
 
-## Providers
+Examples are provided for common use cases:
 
-No providers.
+- [`single_vm`](./examples/single_vm) — provision a single virtual machine
+- [`multiple_vm`](./examples/multiple_vm) — provision multiple virtual machines
+- [`talos`](./examples/talos) — provision virtual machines for Talos Linux
 
-## Modules
+```hcl
+module "vm" {
+  source = "./modules/proxmox-bpg"
 
-No modules.
-
-## Resources
-
-No resources.
-
-## Inputs
-
-No inputs.
-
-## Outputs
-
-No outputs.
-<!-- END_TF_DOCS -->
+  vm = {
+    # VM configuration
+  }
+}

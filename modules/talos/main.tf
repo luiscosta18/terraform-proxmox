@@ -1,8 +1,4 @@
 #
-# modules/talos/main.tf
-#
-
-#
 # ==========================================================================
 # Locals
 # ==========================================================================
@@ -10,17 +6,15 @@
 
 locals {
   #
-  # QEMU guest agent returns:
+  # Proxmox guest-agent addresses are returned grouped by interface.
   #
-  # [
-  #   ["127.0.0.1", "169.254.x.x"],
-  #   [],
-  #   ...
-  #   ["192.168.1.216"],
-  #   ["10.244.0.0"]
-  # ]
+  # Select the first usable IPv4 address on the LAN.
   #
-  # Flatten everything and select the first usable IPv4 address.
+  # Do not use:
+  # - loopback
+  # - link-local
+  # - 10.0.0.0/8
+  # - the cluster VIP
   #
 
   controlplane_ips = {
@@ -55,20 +49,16 @@ locals {
     )
   }
 
-  #
-  # All real node IPs.
-  #
-
   all_ips = concat(
     values(local.controlplane_ips),
     values(local.worker_ips),
   )
 
   #
-  # First control-plane node.
+  # Deterministic bootstrap node.
   #
-  # This is a REAL node IP.
-  # Never use the VIP for bootstrap.
+  # Bootstrap against a real control-plane IPv4 address.
+  # Never bootstrap against the VIP.
   #
 
   bootstrap_controlplane = sort(keys(var.controlplanes))[0]
@@ -78,7 +68,7 @@ locals {
   ]
 
   #
-  # Proxmox nodes that host Talos VMs.
+  # Proxmox nodes used by the cluster.
   #
 
   proxmox_nodes = toset(
@@ -138,8 +128,7 @@ resource "proxmox_download_file" "talos_iso" {
 resource "proxmox_virtual_environment_vm" "controlplane" {
   for_each = var.controlplanes
 
-  name = "${var.cluster.name}-controlplane-${each.key}"
-
+  name      = "${var.cluster.name}-controlplane-${each.key}"
   node_name = each.value.node_name
   vm_id     = each.value.vmid
 
@@ -152,56 +141,30 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
   stop_on_destroy = true
   on_boot         = true
 
-  #
-  # CPU
-  #
-
   cpu {
     cores   = each.value.cores
     sockets = 1
     type    = "host"
   }
 
-  #
-  # Memory
-  #
-
   memory {
     dedicated = each.value.memory
     floating  = each.value.memory
   }
-
-  #
-  # EFI
-  #
 
   efi_disk {
     datastore_id = var.proxmox.disk_datastore
     type         = "4m"
   }
 
-  #
-  # SCSI
-  #
-
   scsi_hardware = "virtio-scsi-pci"
-
-  #
-  # Talos system disk
-  #
 
   disk {
     datastore_id = var.proxmox.disk_datastore
     interface    = "scsi0"
-
-    size = each.value.disk_size
-
-    discard = "on"
+    size         = each.value.disk_size
+    discard      = "on"
   }
-
-  #
-  # Talos installation ISO
-  #
 
   cdrom {
     interface = "ide2"
@@ -211,20 +174,10 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
     ].id
   }
 
-  #
-  # Boot ISO first.
-  #
-  # Talos will boot the ISO, then install itself to scsi0.
-  #
-
   boot_order = [
     "ide2",
     "scsi0",
   ]
-
-  #
-  # QEMU guest agent.
-  #
 
   agent {
     enabled = true
@@ -237,9 +190,9 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
   }
 
   #
-  # Network.
+  # Proxmox network.
   #
-  # DHCP is intentional.
+  # Talos itself receives its address using DHCP.
   #
 
   network_device {
@@ -269,8 +222,7 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
 resource "proxmox_virtual_environment_vm" "worker" {
   for_each = var.workers
 
-  name = "${var.cluster.name}-worker-${each.key}"
-
+  name      = "${var.cluster.name}-worker-${each.key}"
   node_name = each.value.node_name
   vm_id     = each.value.vmid
 
@@ -283,56 +235,30 @@ resource "proxmox_virtual_environment_vm" "worker" {
   stop_on_destroy = true
   on_boot         = true
 
-  #
-  # CPU
-  #
-
   cpu {
     cores   = each.value.cores
     sockets = 1
     type    = "host"
   }
 
-  #
-  # Memory
-  #
-
   memory {
     dedicated = each.value.memory
     floating  = each.value.memory
   }
-
-  #
-  # EFI
-  #
 
   efi_disk {
     datastore_id = var.proxmox.disk_datastore
     type         = "4m"
   }
 
-  #
-  # SCSI
-  #
-
   scsi_hardware = "virtio-scsi-pci"
-
-  #
-  # Talos system disk
-  #
 
   disk {
     datastore_id = var.proxmox.disk_datastore
     interface    = "scsi0"
-
-    size = each.value.disk_size
-
-    discard = "on"
+    size         = each.value.disk_size
+    discard      = "on"
   }
-
-  #
-  # Talos installation ISO
-  #
 
   cdrom {
     interface = "ide2"
@@ -347,10 +273,6 @@ resource "proxmox_virtual_environment_vm" "worker" {
     "scsi0",
   ]
 
-  #
-  # QEMU guest agent.
-  #
-
   agent {
     enabled = true
 
@@ -362,7 +284,9 @@ resource "proxmox_virtual_environment_vm" "worker" {
   }
 
   #
-  # Network.
+  # Proxmox network.
+  #
+  # Talos itself receives its address using DHCP.
   #
 
   network_device {
@@ -413,15 +337,22 @@ data "talos_machine_configuration" "controlplane" {
           }
 
           #
-          # Configure the Kubernetes/Talos API VIP.
+          # Explicit DHCP.
           #
-          # The VIP is NOT the node IP.
+          # Use the physical interface selector instead of depending
+          # on eth0/ens18/etc.
+          #
+          # VIP is attached to the same physical interface.
           #
 
           network = {
             interfaces = [
               {
-                interface = var.network.interface
+                deviceSelector = {
+                  physical = true
+                }
+
+                dhcp = true
 
                 vip = {
                   ip = var.cluster.vip
@@ -466,6 +397,22 @@ data "talos_machine_configuration" "worker" {
             image = var.talos_image.installer_url
           }
 
+          #
+          # Explicit DHCP.
+          #
+
+          network = {
+            interfaces = [
+              {
+                deviceSelector = {
+                  physical = true
+                }
+
+                dhcp = true
+              }
+            ]
+          }
+
           nodeLabels = each.value.labels
         }
       })
@@ -480,15 +427,16 @@ data "talos_machine_configuration" "worker" {
 #
 
 resource "talos_machine_configuration_apply" "controlplane" {
+  #
+  # Do not filter this for_each based on IP discovery.
+  #
+
   for_each = var.controlplanes
 
   #
-  # IMPORTANT:
+  # Apply to the real DHCP IPv4 address.
   #
-  # node     = actual node IP
-  # endpoint = actual node IP
-  #
-  # NEVER use the VIP here during initial configuration.
+  # Never use the VIP here.
   #
 
   node     = local.controlplane_ips[each.key]
@@ -519,7 +467,9 @@ resource "talos_machine_configuration_apply" "controlplane" {
 
 resource "talos_machine_bootstrap" "this" {
   #
-  # Bootstrap only ONE real control-plane node.
+  # Bootstrap against one real control-plane node.
+  #
+  # NEVER bootstrap against the VIP.
   #
 
   node     = local.bootstrap_node
@@ -544,7 +494,7 @@ resource "talos_machine_configuration_apply" "worker" {
   for_each = var.workers
 
   #
-  # Workers are configured directly through their own IP.
+  # Apply to the real worker IPv4 address.
   #
 
   node     = local.worker_ips[each.key]
@@ -581,17 +531,26 @@ data "talos_client_configuration" "this" {
   )
 
   #
-  # Real node IPs.
+  # Real DHCP node addresses.
+  #
+  # These are used by talosctl for node-level operations.
   #
 
   nodes = local.all_ips
 
   #
-  # Stable Talos/Kubernetes endpoint.
+  # IMPORTANT:
+  #
+  # Talos API = TCP/50000
+  #
+  # Kubernetes API = TCP/6443
+  #
+  # Do NOT use var.cluster.endpoint here because that is the
+  # Kubernetes endpoint.
   #
 
   endpoints = [
-    var.cluster.endpoint
+    "https://${var.cluster.vip}:50000"
   ]
 
   depends_on = [
@@ -607,7 +566,9 @@ data "talos_client_configuration" "this" {
 
 resource "talos_cluster_kubeconfig" "this" {
   #
-  # Retrieve kubeconfig through the bootstrap node.
+  # Retrieve kubeconfig from a real control-plane node.
+  #
+  # Do not use the VIP here.
   #
 
   node = local.bootstrap_node
