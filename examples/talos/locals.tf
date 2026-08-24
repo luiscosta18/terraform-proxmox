@@ -11,12 +11,18 @@ locals {
     kubernetes_version = "1.34.0"
 
     #
-    # Kubernetes/Talos API VIP.
+    # Reserved Layer-2 VIP.
+    #
+    # Must NOT be inside the DHCP pool.
     #
 
-    vip = ""
+    vip = "" # add VIP IP
 
-    endpoint = "https://:6443"
+    #
+    # Stable Kubernetes/Talos API endpoint.
+    #
+
+    endpoint = "https://:6443" # add VIP IP
   }
 
   #
@@ -26,17 +32,14 @@ locals {
   #
 
   talos_network = {
-    cidr    = "/24"
-    gateway = ""
-    vip     = local.talos_cluster.vip
+    cidr    = "" # add CIDR
+    gateway = "" # add gateway
 
     #
-    # Talos interface inside the VM.
-    #
-    # With the current Proxmox virtio NIC this is normally eth0.
+    # Control-plane VIP.
     #
 
-    interface = "eth0"
+    vip = local.talos_cluster.vip
   }
 
   #
@@ -100,6 +103,7 @@ locals {
   # ==========================================================================
   # Worker defaults
   # ==========================================================================
+  #
 
   talos_worker_defaults = {
     cores     = 4
@@ -114,7 +118,7 @@ locals {
   #
 
   talos_proxmox_nodes = [
-    "pve",
+    "pve", # add Proxmox node name
   ]
 
   #
@@ -135,12 +139,6 @@ locals {
       cores     = local.talos_controlplane_defaults.cores
       memory    = local.talos_controlplane_defaults.memory
       disk_size = local.talos_controlplane_defaults.disk_size
-
-      #
-      # DHCP.
-      #
-      # QEMU guest agent discovers the real IP.
-      #
 
       mac_address = null
 
@@ -168,10 +166,6 @@ locals {
       cores     = local.talos_worker_defaults.cores
       memory    = local.talos_worker_defaults.memory
       disk_size = local.talos_worker_defaults.disk_size
-
-      #
-      # DHCP.
-      #
 
       mac_address = null
 

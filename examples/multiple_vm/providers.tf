@@ -1,6 +1,6 @@
 provider "proxmox" {
-  endpoint  = "https://IP:8006"
-  api_token = ""
+  endpoint  = "" # add Proxmox endpoint
+  api_token = "" # add Proxmox API token
 
   insecure = true
 
