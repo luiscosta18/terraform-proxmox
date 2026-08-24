@@ -8,4 +8,4 @@ Examples are provided for common use cases:
 
 - [`single_vm`](./examples/single_vm) — provision a single virtual machine
 - [`multiple_vm`](./examples/multiple_vm) — provision multiple virtual machines
-- [`talos`](./examples/talos) — provision virtual machines for Talos Linux
+- [`talos`](./examples/talos) — provision virtual machines for Talos Linux and bootstrap Talos cluster
