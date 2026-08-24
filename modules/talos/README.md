@@ -78,5 +78,5 @@ talosctl version
 talosctl health
 talosctl get members
 talosctl etcd status
-``
+```
 <!-- END_TF_DOCS -->
