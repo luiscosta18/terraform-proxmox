@@ -1,7 +1,3 @@
-#
-# modules/talos/variables.tf
-#
-
 variable "controlplanes" {
   description = "Talos control-plane VM inventory."
 
