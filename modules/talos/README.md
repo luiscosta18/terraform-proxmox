@@ -59,4 +59,24 @@ No modules.
 | <a name="output_talosconfig"></a> [talosconfig](#output\_talosconfig) | Talos client configuration. |
 | <a name="output_worker_ips"></a> [worker\_ips](#output\_worker\_ips) | IPv4 addresses of the Talos worker nodes. |
 | <a name="output_worker_vmids"></a> [worker\_vmids](#output\_worker\_vmids) | Proxmox VM IDs of the worker nodes. |
+
+## Get talosconfig and kubeconfig
+
+```bash
+terraform output -raw kubeconfig > ~/.kube/
+terraform output -raw talosconfig > ./talosconfig
+```
+
+## Talosctl - Dashboard + Health
+
+```bash
+export TALOSCONFIG="$PWD/talosconfig"
+
+talosctl dashboard
+
+talosctl version
+talosctl health
+talosctl get members
+talosctl etcd status
+``
 <!-- END_TF_DOCS -->
