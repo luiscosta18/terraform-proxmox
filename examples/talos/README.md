@@ -1,4 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
+## [Talos Linux Image Factory](https://factory.talos.dev/)
+
 ## Get talosconfig and kubeconfig
 
 ```bash
