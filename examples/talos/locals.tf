@@ -96,7 +96,7 @@ locals {
   talos_controlplane_defaults = {
     cores     = 4
     memory    = 8192
-    disk_size = 100
+    disk_size = 40
   }
 
   #
@@ -108,7 +108,7 @@ locals {
   talos_worker_defaults = {
     cores     = 4
     memory    = 8192
-    disk_size = 100
+    disk_size = 40
   }
 
   #
