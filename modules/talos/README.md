@@ -80,7 +80,7 @@ talosctl get members
 talosctl etcd status
 ```
 
-## Talosctl - update k8s version
+## Talosctl - upgrade k8s version
 
 ```bash
 talosctl upgrade-k8s --to <kubernetes_version> --nodes <cp_ip>
