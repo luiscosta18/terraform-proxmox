@@ -8,7 +8,7 @@ locals {
   talos_cluster = {
     name               = "homelab"
     talos_version      = "v1.13.9"
-    kubernetes_version = "1.34.0"
+    kubernetes_version = "1.36.4"
 
     #
     # Reserved Layer-2 VIP.
