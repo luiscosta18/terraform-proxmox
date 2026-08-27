@@ -1,6 +1,6 @@
 provider "proxmox" {
-  endpoint  = "" # add Proxmox endpoint
-  api_token = "" # add Proxmox API token
+  endpoint  = var.proxmox_endpoint
+  api_token = var.proxmox_api_token
 
   insecure = true
 }

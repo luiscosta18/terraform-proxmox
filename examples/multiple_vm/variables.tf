@@ -14,3 +14,15 @@ variable "vm_count" {
     error_message = "vm_count must be between 1 and 100."
   }
 }
+
+variable "proxmox_endpoint" {
+  description = "Proxmox endpoint URL."
+
+  type = string
+}
+
+variable "proxmox_api_token" {
+  description = "Proxmox API token."
+
+  type = string
+}
