@@ -18,3 +18,4 @@ repos:
           - README.md
           - --output-mode
           - inject
+          - .
