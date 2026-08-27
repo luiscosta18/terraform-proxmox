@@ -33,6 +33,5 @@ jobs:
 
       - name: Setup Trivy
         uses: aquasecurity/setup-trivy@v0.2.5
-
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
