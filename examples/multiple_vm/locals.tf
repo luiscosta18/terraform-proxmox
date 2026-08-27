@@ -40,9 +40,7 @@ locals {
 
         user = "ubuntu"
 
-        ssh_keys = [
-          trimspace(file("~/.ssh/id_rsa.pub"))
-        ]
+        ssh_public_key = var.ssh_public_key
       }
 
       networks = [

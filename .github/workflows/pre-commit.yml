@@ -26,8 +26,13 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.16.0"
           terraform_wrapper: false
 
-      - name: Setup pre-commit
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v5
+
+      - name: Setup Trivy
+        uses: aquasecurity/setup-trivy@v0.2.5
+
+      - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
