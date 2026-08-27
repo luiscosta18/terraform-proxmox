@@ -55,16 +55,6 @@ variable "cluster" {
   })
 }
 
-variable "network" {
-  description = "Network configuration for the Talos cluster."
-
-  type = object({
-    cidr      = string
-    gateway   = string
-    vip       = string
-    interface = optional(string)
-  })
-}
 
 variable "proxmox" {
   description = "Proxmox storage and network configuration."

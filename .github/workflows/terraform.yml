@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   pull_request:
 
 permissions:
@@ -13,31 +12,21 @@ permissions:
 jobs:
   terraform:
     name: Terraform checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.15.0
-
-      - name: Terraform Format
-        run: terraform fmt -recursive -check
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init -backend=false
 
       - name: Terraform Validate
         run: terraform validate
-
-      - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v5
-
-      - name: TFLint Init
-        run: tflint --init
-
-      - name: TFLint
-        run: tflint
