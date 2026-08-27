@@ -3,16 +3,16 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15 |
 | <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.111 |
-| <a name="requirement_talos"></a> [talos](#requirement\_talos) | >= 0.11.0 |
+| <a name="requirement_talos"></a> [talos](#requirement\_talos) | >= 0.11 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.111 |
-| <a name="provider_talos"></a> [talos](#provider\_talos) | >= 0.11.0 |
+| <a name="provider_talos"></a> [talos](#provider\_talos) | >= 0.11 |
 
 ## Modules
 
@@ -59,5 +59,4 @@ No modules.
 | <a name="output_talosconfig"></a> [talosconfig](#output\_talosconfig) | Talos client configuration. |
 | <a name="output_worker_ips"></a> [worker\_ips](#output\_worker\_ips) | IPv4 addresses of the Talos worker nodes. |
 | <a name="output_worker_vmids"></a> [worker\_vmids](#output\_worker\_vmids) | Proxmox VM IDs of the worker nodes. |
-
 <!-- END_TF_DOCS -->

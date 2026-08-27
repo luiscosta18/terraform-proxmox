@@ -19,11 +19,3 @@ Contribution guide for the `terraform-proxmox` project.
 4. Update documentation when changing module behavior.
 5. Update `CHANGELOG.md` for user-facing changes.
 6. Run the required checks locally before opening a PR.
-
-### Local Checks
-
-Run:
-
-```bash
-make fmt
-make validate
