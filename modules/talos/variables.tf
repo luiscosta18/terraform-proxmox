@@ -55,6 +55,7 @@ variable "cluster" {
   })
 }
 
+
 variable "proxmox" {
   description = "Proxmox storage and network configuration."
 
