@@ -1,4 +1,31 @@
 <!-- BEGIN_TF_DOCS -->
+## [Talos Linux Image Factory](https://factory.talos.dev/)
+
+## Get talosconfig and kubeconfig
+
+```bash
+terraform output -raw kubeconfig > ~/.kube/config
+terraform output -raw talosconfig > ./talosconfig
+```
+
+## Talosctl - Dashboard + Health
+
+```bash
+export TALOSCONFIG="$PWD/talosconfig"
+
+talosctl dashboard
+
+talosctl version
+talosctl get members
+talosctl etcd status
+```
+
+## Talosctl - upgrade k8s version
+
+```bash
+talosctl upgrade-k8s --to <kubernetes_version> --nodes <cp_ip>
+```
+
 ## Requirements
 
 | Name | Version |
