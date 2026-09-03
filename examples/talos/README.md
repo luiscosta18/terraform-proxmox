@@ -20,9 +20,21 @@ talosctl get members
 talosctl etcd status
 ```
 
-## Talosctl - upgrade k8s version
+## Talosctl - upgrade talos + k8s version
 
 ```bash
+curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v<talos_version>/talosctl-linux-amd64
+chmod +x talosctl
+sudo mv talosctl /usr/local/bin/talosctl
+```
+
+```bash
+talosctl upgrade \                              
+  --nodes <node_ip> \                        
+  --image factory.talos.dev/metal-installer/<schematic_id>:v<talos_version>
+```
+
+```bash  
 talosctl upgrade-k8s --to <kubernetes_version> --nodes <cp_ip>
 ```
 
