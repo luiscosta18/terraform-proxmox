@@ -175,8 +175,8 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
   }
 
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
 
   agent {
@@ -269,8 +269,8 @@ resource "proxmox_virtual_environment_vm" "worker" {
   }
 
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
 
   agent {
