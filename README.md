@@ -8,6 +8,7 @@ Terraform modules for provisioning, configuring, and managing [Talos Linux](http
 
 Examples are provided for common use cases:
 
+- [`api_keys`](./examples/api_keys) — create an API token with VM, disk, and VM property management permissions
 - [`single_vm`](./examples/single_vm) — provision a single virtual machine
 - [`multiple_vm`](./examples/multiple_vm) — provision multiple virtual machines
 - [`talos`](./examples/talos) — provision virtual machines for Talos Linux and bootstrap Talos cluster
