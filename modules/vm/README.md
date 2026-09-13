@@ -4,13 +4,13 @@
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.111 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.113 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.111 |
+| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.113 |
 
 ## Modules
 
