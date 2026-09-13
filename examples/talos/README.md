@@ -31,7 +31,7 @@ sudo mv talosctl /usr/local/bin/talosctl
 ```bash
 talosctl upgrade \                              
   --nodes <node_ip> \                        
-  --image factory.talos.dev/metal-installer/<schematic_id>:v<talos_version>
+  --image factory.talos.dev/metal-installer-secureboot/<schematic_id>:v<talos_version>
 ```
 
 ```bash  
