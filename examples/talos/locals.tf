@@ -7,7 +7,7 @@ locals {
 
   talos_cluster = {
     name               = "homelab"
-    talos_version      = "v1.14.0"
+    talos_version      = "v1.14.2"
     kubernetes_version = "1.37.0"
 
     #
