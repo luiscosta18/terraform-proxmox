@@ -5,6 +5,45 @@
 #
 
 locals {
+  talos_version_parts = split(".", trimprefix(var.cluster.talos_version, "v"))
+
+  # Talos 1.14 moved these fields into separate configuration documents.
+  talos_uses_multidoc_config = (
+    tonumber(local.talos_version_parts[0]) > 1 ||
+    (
+      tonumber(local.talos_version_parts[0]) == 1 &&
+      tonumber(local.talos_version_parts[1]) >= 14
+    )
+  )
+
+  talos_install_config_patch = (
+    local.talos_uses_multidoc_config
+    ? yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "UnattendedInstallConfig"
+
+      installer = {
+        image = var.talos_image.installer_url
+      }
+
+      provisioning = {
+        diskSelector = {
+          match = "disk.dev_path == \"/dev/sda\""
+        }
+
+        wipe = false
+      }
+    })
+    : yamlencode({
+      machine = {
+        install = {
+          disk  = "/dev/sda"
+          image = var.talos_image.installer_url
+        }
+      }
+    })
+  )
+
   #
   # Proxmox guest-agent addresses are returned grouped by interface.
   #
@@ -331,11 +370,6 @@ data "talos_machine_configuration" "controlplane" {
     [
       yamlencode({
         machine = {
-          install = {
-            disk  = "/dev/sda"
-            image = var.talos_image.installer_url
-          }
-
           #
           # Explicit DHCP.
           #
@@ -360,10 +394,22 @@ data "talos_machine_configuration" "controlplane" {
               }
             ]
           }
-
-          nodeLabels = each.value.labels
         }
-      })
+      }),
+      local.talos_install_config_patch,
+      (
+        local.talos_uses_multidoc_config
+        ? yamlencode({
+          apiVersion = "v1alpha1"
+          kind       = "KubeNodeConfig"
+          labels     = each.value.labels
+        })
+        : yamlencode({
+          machine = {
+            nodeLabels = each.value.labels
+          }
+        })
+      ),
     ]
   )
 }
@@ -392,11 +438,6 @@ data "talos_machine_configuration" "worker" {
     [
       yamlencode({
         machine = {
-          install = {
-            disk  = "/dev/sda"
-            image = var.talos_image.installer_url
-          }
-
           #
           # Explicit DHCP.
           #
@@ -412,10 +453,22 @@ data "talos_machine_configuration" "worker" {
               }
             ]
           }
-
-          nodeLabels = each.value.labels
         }
-      })
+      }),
+      local.talos_install_config_patch,
+      (
+        local.talos_uses_multidoc_config
+        ? yamlencode({
+          apiVersion = "v1alpha1"
+          kind       = "KubeNodeConfig"
+          labels     = each.value.labels
+        })
+        : yamlencode({
+          machine = {
+            nodeLabels = each.value.labels
+          }
+        })
+      ),
     ]
   )
 }
