@@ -6,8 +6,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
 
 concurrency:
   group: release-main
@@ -23,30 +21,70 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record previous release
-        id: previous
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
       - name: Create semantic release
-        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
-        with:
-          release-type: simple
-
-      - name: Package and upload release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PREVIOUS_TAG: ${{ steps.previous.outputs.tag }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
-          if [ -z "$TAG" ] || [ "$TAG" = "$PREVIOUS_TAG" ]; then
-            echo "No new release was created."
+          PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "::error::No previous release found; cannot determine the next version."
+            exit 1
+          fi
+
+          if ! [[ "$PREVIOUS_TAG" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+].*)?$ ]]; then
+            echo "::error::Previous release tag '$PREVIOUS_TAG' is not a semantic version."
+            exit 1
+          fi
+          MAJOR=${BASH_REMATCH[1]}
+          MINOR=${BASH_REMATCH[2]}
+          PATCH=${BASH_REMATCH[3]}
+
+          COMMITS=$(git log --format=%B "${PREVIOUS_TAG}..${GITHUB_SHA}")
+          if [ -z "$COMMITS" ]; then
+            echo "No commits since $PREVIOUS_TAG."
             exit 0
           fi
 
+          BREAKING=false
+          FEATURE=false
+          FIX=false
+          CONVENTIONAL_HEADER='^([a-z][a-z0-9-]*)(\([^)]+\))?(!)?:[[:space:]]'
+          BREAKING_FOOTER='^BREAKING( |-)CHANGE:'
+          while IFS= read -r LINE; do
+            if [[ "$LINE" =~ $CONVENTIONAL_HEADER ]]; then
+              TYPE=${BASH_REMATCH[1]}
+              BANG=${BASH_REMATCH[3]}
+              if [ "$BANG" = "!" ]; then
+                BREAKING=true
+              fi
+              case "$TYPE" in
+                feat) FEATURE=true ;;
+                fix|perf) FIX=true ;;
+              esac
+            elif [[ "$LINE" =~ $BREAKING_FOOTER ]]; then
+              BREAKING=true
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$BREAKING" = true ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$FEATURE" = true ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif [ "$FIX" = true ]; then
+            PATCH=$((PATCH + 1))
+          else
+            echo "No releasable Conventional Commits since $PREVIOUS_TAG."
+            exit 0
+          fi
+
+          TAG="v${MAJOR}.${MINOR}.${PATCH}"
           ARCHIVE="terraform-proxmox-${TAG}.zip"
-          git archive --format=zip --output="$ARCHIVE" "$TAG"
-          gh release upload "$TAG" "$ARCHIVE" --clobber
+          git archive --format=zip --output="$ARCHIVE" "$GITHUB_SHA"
+          gh release create "$TAG" "$ARCHIVE" \
+            --title "$TAG" \
+            --generate-notes \
+            --target "$GITHUB_SHA"
