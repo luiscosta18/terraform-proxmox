@@ -17,5 +17,14 @@ Contribution guide for the `terraform-proxmox` project.
 2. Make focused changes under `modules/` or `examples/`.
 3. Keep commits small and descriptive.
 4. Update documentation when changing module behavior.
-5. Update `CHANGELOG.md` for user-facing changes.
+5. Use Conventional Commit messages for user-facing changes; release notes are generated from them.
 6. Run the required checks locally before opening a PR.
+
+## Commit Messages and Releases
+
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages. Releases are generated from commits merged into `main`:
+
+- `feat:` starts a minor release.
+- `fix:` starts a patch release.
+- Add `!` after the type or scope for a breaking change, such as `feat!: remove an input`, to start a major release.
+- Other commit types do not trigger a release by themselves.
