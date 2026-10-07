@@ -1,4 +1,4 @@
-name: Create release on push to main
+name: Create release from conventional commits
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
 jobs:
   create-release:
     runs-on: ubuntu-latest
@@ -14,26 +18,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Determine release tag
-        id: tag
-        run: |
-          # Create a deterministic tag using date + short SHA
-          DATE=$(date -u +"%Y.%m.%d")
-          SHA=$(git rev-parse --short=8 HEAD)
-          echo "TAG=v${DATE}-${SHA}" >> "$GITHUB_OUTPUT"
-
-      - name: Package module
-        run: |
-          git archive \
-            --format=zip \
-            --output="terraform-proxmox-${{ steps.tag.outputs.TAG }}.zip" \
-            HEAD
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          tag_name: ${{ steps.tag.outputs.TAG }}
-          files: terraform-proxmox-${{ steps.tag.outputs.TAG }}.zip
+          fetch-depth: 0
+
+      - name: Record previous release
+        id: previous
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create semantic release
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+        with:
+          release-type: simple
+          skip-github-pull-request: true
+
+      - name: Package and upload release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREVIOUS_TAG: ${{ steps.previous.outputs.tag }}
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          if [ -z "$TAG" ] || [ "$TAG" = "$PREVIOUS_TAG" ]; then
+            echo "No new release was created."
+            exit 0
+          fi
+
+          ARCHIVE="terraform-proxmox-${TAG}.zip"
+          git archive --format=zip --output="$ARCHIVE" "$TAG"
+          gh release upload "$TAG" "$ARCHIVE" --clobber
