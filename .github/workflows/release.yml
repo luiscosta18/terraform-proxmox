@@ -28,25 +28,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          PREVIOUS_TAG=$(gh release list --limit 1000 --json tagName,publishedAt --jq '[.[] | select(.tagName | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))] | max_by(.publishedAt) | .tagName // ""')
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "::error::No previous release found; cannot determine the next version."
+            echo "::error::No semantic release found; cannot determine the next version."
             exit 1
           fi
 
-          LEGACY_RELEASE_TAG="v2026.11.1"
-          INITIAL_RELEASE=false
-          if [ "$PREVIOUS_TAG" = "$LEGACY_RELEASE_TAG" ]; then
-            INITIAL_RELEASE=true
-          else
-            if ! [[ "$PREVIOUS_TAG" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+].*)?$ ]]; then
-              echo "::error::Previous release tag '$PREVIOUS_TAG' is not a semantic version."
-              exit 1
-            fi
-            MAJOR=${BASH_REMATCH[1]}
-            MINOR=${BASH_REMATCH[2]}
-            PATCH=${BASH_REMATCH[3]}
+          if ! [[ "$PREVIOUS_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Previous release tag '$PREVIOUS_TAG' is not a semantic version."
+            exit 1
           fi
+          MAJOR=${BASH_REMATCH[1]}
+          MINOR=${BASH_REMATCH[2]}
+          PATCH=${BASH_REMATCH[3]}
 
           COMMITS=$(git log --format=%B "${PREVIOUS_TAG}..${GITHUB_SHA}")
           if [ -z "$COMMITS" ]; then
@@ -82,21 +76,17 @@ jobs:
             exit 0
           fi
 
-          if [ "$INITIAL_RELEASE" = true ]; then
-            TAG="v1.0.0"
+          if (( RELEASE_LEVEL == 3 )); then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif (( RELEASE_LEVEL == 2 )); then
+            MINOR=$((MINOR + 1))
+            PATCH=0
           else
-            if (( RELEASE_LEVEL == 3 )); then
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-            elif (( RELEASE_LEVEL == 2 )); then
-              MINOR=$((MINOR + 1))
-              PATCH=0
-            else
-              PATCH=$((PATCH + 1))
-            fi
-            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            PATCH=$((PATCH + 1))
           fi
+          TAG="v${MAJOR}.${MINOR}.${PATCH}"
 
           ARCHIVE="terraform-proxmox-${TAG}.zip"
           git archive --format=zip --output="$ARCHIVE" "$GITHUB_SHA"
