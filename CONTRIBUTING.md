@@ -29,4 +29,4 @@ Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for c
 - Add `!` after the type or scope for a breaking change, such as `feat!: remove an input`, to start a major release.
 - Other commit types do not trigger a release by themselves.
 
-Merging a releasable Conventional Commit into `main` publishes a semantic release and module ZIP directly. The existing date-based releases are retained; the first releasable change after this migration starts the SemVer series at `v1.0.0`. Subsequent breaking changes take precedence over features, and features take precedence over fixes when several releasable commits are included in one push.
+Merging a releasable Conventional Commit into `main` publishes a semantic release and module ZIP directly. Existing date-based releases are retained, and the SemVer series now continues from `v1.0.0`. Breaking changes take precedence over features, and features take precedence over fixes when several releasable commits are included in one push.
