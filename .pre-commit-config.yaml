@@ -1,14 +1,13 @@
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.105.0
+    rev: 80c8033123f6d6b9ccd1a9458562ea4180742af7 # v1.109.2
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
       - id: terraform_tflint
-      - id: terraform_trivy
 
   - repo: https://github.com/terraform-docs/terraform-docs
-    rev: v0.20.0
+    rev: 9d4455198941806aa02ec14369de030cda2c2b59 # v0.24.0
     hooks:
       - id: terraform-docs-go
         args:
@@ -18,4 +17,7 @@ repos:
           - README.md
           - --output-mode
           - inject
+          - --hide
+          - requirements,providers,modules,resources,inputs,outputs
+          - --hide-empty
           - .

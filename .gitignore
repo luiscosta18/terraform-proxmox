@@ -2,6 +2,7 @@
 *.tfstate
 *.tfstate.*
 *.tfvars.json
+examples/talos/talosconfig
 
 crash.log
 crash.*.log
