@@ -19,5 +19,5 @@ repos:
           - --output-mode
           - inject
           - --hide
-          - requirements
+          - requirements,providers,modules,resources,inputs,outputs
           - .
