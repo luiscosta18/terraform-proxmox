@@ -29,4 +29,4 @@ Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for c
 - Add `!` after the type or scope for a breaking change, such as `feat!: remove an input`, to start a major release.
 - Other commit types do not trigger a release by themselves.
 
-The release workflow uses Release Please to open release pull requests. Repository administrators must allow GitHub Actions to create and approve pull requests in **Settings → Actions → General → Workflow permissions**; otherwise, the workflow cannot create the release PR.
+Merging a releasable Conventional Commit into `main` publishes a semantic release and module ZIP directly. Breaking changes take precedence over features, and features take precedence over fixes when several releasable commits are included in one push.
