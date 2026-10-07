@@ -1,4 +1,42 @@
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.16.0 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.115 |
+| <a name="requirement_talos"></a> [talos](#requirement\_talos) | ~> 0.12 |
+
+## Modules
+
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_talos"></a> [talos](#module\_talos) | ../../modules/talos | n/a |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_proxmox_api_token"></a> [proxmox\_api\_token](#input\_proxmox\_api\_token) | Proxmox API token. | `string` | n/a | yes |
+| <a name="input_proxmox_endpoint"></a> [proxmox\_endpoint](#input\_proxmox\_endpoint) | Proxmox endpoint URL. | `string` | n/a | yes |
+| <a name="input_talos_iso_checksum"></a> [talos\_iso\_checksum](#input\_talos\_iso\_checksum) | Optional SHA-512 checksum of the Talos ISO. | `string` | `null` | no |
+| <a name="input_talos_iso_url"></a> [talos\_iso\_url](#input\_talos\_iso\_url) | Talos Image Factory ISO URL. | `string` | n/a | yes |
+| <a name="input_talos_schematic_id"></a> [talos\_schematic\_id](#input\_talos\_schematic\_id) | Talos Image Factory schematic ID. | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Kubernetes kubeconfig |
+| <a name="output_talosconfig"></a> [talosconfig](#output\_talosconfig) | Talos client configuration |
+<!-- END_TF_DOCS -->
+
+Copy `terraform.tfvars.example` to `terraform.tfvars` and set the Talos Image
+Factory values for your cluster. Set `proxmox_endpoint` and
+`proxmox_api_token` using Terraform input variables or `TF_VAR_` environment
+variables. Local `.tfvars` files are ignored by Git; do not commit credentials
+or machine-specific values.
+
 ## [Talos Linux Image Factory](https://factory.talos.dev/)
 
 ## Get talosconfig and kubeconfig
@@ -29,51 +67,11 @@ sudo mv talosctl /usr/local/bin/talosctl
 ```
 
 ```bash
-talosctl upgrade \                              
-  --nodes <node_ip> \                        
+talosctl upgrade \
+  --nodes <node_ip> \
   --image factory.talos.dev/metal-installer-secureboot/<schematic_id>:v<talos_version>
 ```
 
-```bash  
+```bash
 talosctl upgrade-k8s --to <kubernetes_version> --nodes <cp_ip>
 ```
-
-## Requirements
-
-| Name | Version |
-| ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.16 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.113 |
-| <a name="requirement_talos"></a> [talos](#requirement\_talos) | ~> 0.11.0 |
-
-## Providers
-
-No providers.
-
-## Modules
-
-| Name | Source | Version |
-| ---- | ------ | ------- |
-| <a name="module_talos"></a> [talos](#module\_talos) | ../../modules/talos | n/a |
-
-## Resources
-
-No resources.
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_proxmox_api_token"></a> [proxmox\_api\_token](#input\_proxmox\_api\_token) | Proxmox API token. | `string` | n/a | yes |
-| <a name="input_proxmox_endpoint"></a> [proxmox\_endpoint](#input\_proxmox\_endpoint) | Proxmox endpoint URL. | `string` | n/a | yes |
-| <a name="input_talos_iso_checksum"></a> [talos\_iso\_checksum](#input\_talos\_iso\_checksum) | Optional SHA-512 checksum of the Talos ISO. | `string` | `null` | no |
-| <a name="input_talos_iso_url"></a> [talos\_iso\_url](#input\_talos\_iso\_url) | Talos Image Factory ISO URL. | `string` | n/a | yes |
-| <a name="input_talos_schematic_id"></a> [talos\_schematic\_id](#input\_talos\_schematic\_id) | Talos Image Factory schematic ID. | `string` | n/a | yes |
-
-## Outputs
-
-| Name | Description |
-| ---- | ----------- |
-| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Kubernetes kubeconfig |
-| <a name="output_talosconfig"></a> [talosconfig](#output\_talosconfig) | Talos client configuration |
-<!-- END_TF_DOCS -->
