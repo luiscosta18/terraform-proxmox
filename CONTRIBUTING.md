@@ -28,3 +28,5 @@ Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for c
 - `fix:` starts a patch release.
 - Add `!` after the type or scope for a breaking change, such as `feat!: remove an input`, to start a major release.
 - Other commit types do not trigger a release by themselves.
+
+The release workflow uses Release Please to open release pull requests. Repository administrators must allow GitHub Actions to create and approve pull requests in **Settings → Actions → General → Workflow permissions**; otherwise, the workflow cannot create the release PR.
