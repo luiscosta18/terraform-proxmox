@@ -1,0 +1,2 @@
+talos_schematic_id = "<talos-image-factory-schematic-id>"
+talos_iso_url      = "https://factory.talos.dev/image/<talos-image-factory-schematic-id>/<talos-version>/metal-amd64-secureboot.iso"

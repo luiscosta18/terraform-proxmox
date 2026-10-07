@@ -22,11 +22,17 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: 1.15.0
+          terraform_version: 1.16.0
           terraform_wrapper: false
 
-      - name: Terraform Init
-        run: terraform init -backend=false
+      - name: Terraform Init and Validate
+        run: |
+          set -euo pipefail
 
-      - name: Terraform Validate
-        run: terraform validate
+          for dir in modules/* examples/*; do
+            [ -f "$dir/versions.tf" ] || continue
+            echo "::group::Terraform validate: $dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done

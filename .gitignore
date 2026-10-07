@@ -1,6 +1,8 @@
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfvars
+!*.tfvars.example
 *.tfvars.json
 examples/talos/talosconfig
 

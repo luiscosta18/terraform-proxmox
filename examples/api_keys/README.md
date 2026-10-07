@@ -9,7 +9,7 @@ The module does not manage user membership. Because the example uses
 `privileges_separation = false`, use a dedicated Proxmox user with no other
 privileges; the token inherits that user's permissions.
 
-The provider is pinned to `bpg/proxmox` `~> 0.112.0`.
+The provider is pinned to `bpg/proxmox` `~> 0.113`.
 
 ```bash
 terraform init
