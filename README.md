@@ -14,4 +14,5 @@ Examples are provided for common use cases:
 - [`talos`](./examples/talos) — provision virtual machines for Talos Linux and bootstrap Talos cluster
 
 <!-- BEGIN_TF_DOCS -->
+
 <!-- END_TF_DOCS -->

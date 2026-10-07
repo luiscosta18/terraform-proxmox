@@ -19,4 +19,5 @@ repos:
           - inject
           - --hide
           - requirements,providers,modules,resources,inputs,outputs
+          - --hide-empty
           - .
