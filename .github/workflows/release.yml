@@ -26,19 +26,27 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
+
           PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "::error::No previous release found; cannot determine the next version."
             exit 1
           fi
 
-          if ! [[ "$PREVIOUS_TAG" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+].*)?$ ]]; then
-            echo "::error::Previous release tag '$PREVIOUS_TAG' is not a semantic version."
-            exit 1
+          LEGACY_RELEASE_TAG="v2026.11.1"
+          INITIAL_RELEASE=false
+          if [ "$PREVIOUS_TAG" = "$LEGACY_RELEASE_TAG" ]; then
+            INITIAL_RELEASE=true
+          else
+            if ! [[ "$PREVIOUS_TAG" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+].*)?$ ]]; then
+              echo "::error::Previous release tag '$PREVIOUS_TAG' is not a semantic version."
+              exit 1
+            fi
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
           fi
-          MAJOR=${BASH_REMATCH[1]}
-          MINOR=${BASH_REMATCH[2]}
-          PATCH=${BASH_REMATCH[3]}
 
           COMMITS=$(git log --format=%B "${PREVIOUS_TAG}..${GITHUB_SHA}")
           if [ -z "$COMMITS" ]; then
@@ -46,42 +54,50 @@ jobs:
             exit 0
           fi
 
-          BREAKING=false
-          FEATURE=false
-          FIX=false
+          RELEASE_LEVEL=0
           CONVENTIONAL_HEADER='^([a-z][a-z0-9-]*)(\([^)]+\))?(!)?:[[:space:]]'
           BREAKING_FOOTER='^BREAKING( |-)CHANGE:'
           while IFS= read -r LINE; do
             if [[ "$LINE" =~ $CONVENTIONAL_HEADER ]]; then
               TYPE=${BASH_REMATCH[1]}
-              BANG=${BASH_REMATCH[3]}
-              if [ "$BANG" = "!" ]; then
-                BREAKING=true
-              fi
+              BANG=${BASH_REMATCH[3]:-}
               case "$TYPE" in
-                feat) FEATURE=true ;;
-                fix|perf) FIX=true ;;
+                feat) BUMP=2 ;;
+                fix|perf) BUMP=1 ;;
+                *) BUMP=0 ;;
               esac
+              if [ "$BANG" = "!" ]; then
+                BUMP=3
+              fi
+              if (( BUMP > RELEASE_LEVEL )); then
+                RELEASE_LEVEL=$BUMP
+              fi
             elif [[ "$LINE" =~ $BREAKING_FOOTER ]]; then
-              BREAKING=true
+              RELEASE_LEVEL=3
             fi
           done <<< "$COMMITS"
 
-          if [ "$BREAKING" = true ]; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-          elif [ "$FEATURE" = true ]; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-          elif [ "$FIX" = true ]; then
-            PATCH=$((PATCH + 1))
-          else
+          if (( RELEASE_LEVEL == 0 )); then
             echo "No releasable Conventional Commits since $PREVIOUS_TAG."
             exit 0
           fi
 
-          TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          if [ "$INITIAL_RELEASE" = true ]; then
+            TAG="v1.0.0"
+          else
+            if (( RELEASE_LEVEL == 3 )); then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+            elif (( RELEASE_LEVEL == 2 )); then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            else
+              PATCH=$((PATCH + 1))
+            fi
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
           ARCHIVE="terraform-proxmox-${TAG}.zip"
           git archive --format=zip --output="$ARCHIVE" "$GITHUB_SHA"
           gh release create "$TAG" "$ARCHIVE" \
