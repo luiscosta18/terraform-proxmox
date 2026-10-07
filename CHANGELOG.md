@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026.11.1-63a59bcd](https://github.com/luiscosta18/terraform-proxmox/compare/v2026.11.0-63a59bcd...v2026.11.1-63a59bcd) (2026-10-07)
+
+
+### Bug Fixes
+
+* **api_keys:** bump Proxmox provider minimum to 0.116.0 ([31f8761](https://github.com/luiscosta18/terraform-proxmox/commit/31f87610be0815bb87897f32ea529c8b2403efe5))
+* **api_keys:** require Proxmox provider 0.116.0 ([5828e38](https://github.com/luiscosta18/terraform-proxmox/commit/5828e383f8955e967550312ff068a96d9013dd06))
+
 ## [2026.11.0-63a59bcd](https://github.com/luiscosta18/terraform-proxmox/compare/v2026.10.7-63a59bcd...v2026.11.0-63a59bcd) (2026-10-07)
 
 
