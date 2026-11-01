@@ -3,15 +3,15 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.115 |
-| <a name="requirement_talos"></a> [talos](#requirement\_talos) | >= 0.12 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.17.0 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.119.0 |
+| <a name="requirement_talos"></a> [talos](#requirement\_talos) | ~> 0.12.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | 0.116.0 |
+| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | 0.119.0 |
 | <a name="provider_talos"></a> [talos](#provider\_talos) | 0.12.0 |
 
 ## Modules
@@ -40,12 +40,12 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_cluster"></a> [cluster](#input\_cluster) | Talos/Kubernetes cluster configuration. | <pre>object({<br/>    name               = string<br/>    endpoint           = string<br/>    talos_version      = string<br/>    kubernetes_version = string<br/>    vip                = string<br/>  })</pre> | n/a | yes |
 | <a name="input_controlplane_config_patches"></a> [controlplane\_config\_patches](#input\_controlplane\_config\_patches) | Talos configuration patches applied to control-plane nodes. | `list(string)` | `[]` | no |
-| <a name="input_controlplanes"></a> [controlplanes](#input\_controlplanes) | Talos control-plane VM inventory. | <pre>map(object({<br/>    vmid      = number<br/>    node_name = string<br/><br/>    mac_address = optional(string)<br/><br/>    cores     = optional(number, 2)<br/>    memory    = optional(number, 4096)<br/>    disk_size = optional(number, 32)<br/><br/>    labels = optional(map(string), {})<br/>  }))</pre> | n/a | yes |
+| <a name="input_controlplanes"></a> [controlplanes](#input\_controlplanes) | Talos control-plane VM inventory. | <pre>map(object({<br/>    vmid      = number<br/>    node_name = string<br/><br/>    mac_address = optional(string)<br/><br/>    cores              = optional(number, 2)<br/>    memory             = optional(number, 4096)<br/>    disk_size          = optional(number, 32)<br/>    longhorn_disk_size = optional(number)<br/><br/>    labels = optional(map(string), {})<br/>  }))</pre> | n/a | yes |
 | <a name="input_machine_config_patches"></a> [machine\_config\_patches](#input\_machine\_config\_patches) | Talos configuration patches applied to all nodes. | `list(string)` | `[]` | no |
 | <a name="input_proxmox"></a> [proxmox](#input\_proxmox) | Proxmox storage and network configuration. | <pre>object({<br/>    image_datastore = string<br/>    disk_datastore  = string<br/>    network_bridge  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_talos_image"></a> [talos\_image](#input\_talos\_image) | Talos installation image configuration. | <pre>object({<br/>    iso_url            = string<br/>    installer_url      = string<br/>    checksum           = optional(string)<br/>    checksum_algorithm = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | Talos configuration patches applied to worker nodes. | `list(string)` | `[]` | no |
-| <a name="input_workers"></a> [workers](#input\_workers) | Talos worker VM inventory. | <pre>map(object({<br/>    vmid      = number<br/>    node_name = string<br/><br/>    mac_address = optional(string)<br/><br/>    cores     = optional(number, 4)<br/>    memory    = optional(number, 8192)<br/>    disk_size = optional(number, 64)<br/><br/>    labels = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_workers"></a> [workers](#input\_workers) | Talos worker VM inventory. | <pre>map(object({<br/>    vmid      = number<br/>    node_name = string<br/><br/>    mac_address = optional(string)<br/><br/>    cores              = optional(number, 4)<br/>    memory             = optional(number, 8192)<br/>    disk_size          = optional(number, 64)<br/>    longhorn_disk_size = optional(number)<br/><br/>    labels = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 

@@ -7,8 +7,8 @@ locals {
 
   talos_cluster = {
     name               = "homelab"
-    talos_version      = "v1.14.2"
-    kubernetes_version = "1.37.0"
+    talos_version      = "v1.14.5"
+    kubernetes_version = "1.37.2"
 
     #
     # Reserved Layer-2 VIP.
@@ -16,13 +16,13 @@ locals {
     # Must NOT be inside the DHCP pool.
     #
 
-    vip = "" # add VIP IP
+    vip = var.talos_vip
 
     #
     # Stable Kubernetes/Talos API endpoint.
     #
 
-    endpoint = "https://:6443" # add VIP IP
+    endpoint = "https://${var.talos_vip}:6443"
   }
 
   #
@@ -44,22 +44,42 @@ locals {
   #
 
   talos_image = {
-    iso_url = var.talos_iso_url
-
-    checksum = var.talos_iso_checksum
-
-    checksum_algorithm = (
-      var.talos_iso_checksum != null
-      ? "sha512"
-      : null
-    )
-
-    installer_url = format(
-      "factory.talos.dev/metal-installer/%s:%s",
-      var.talos_schematic_id,
-      local.talos_cluster.talos_version
-    )
+    iso_url       = data.talos_image_factory_urls.this.urls.iso_secureboot
+    installer_url = data.talos_image_factory_urls.this.urls.installer_secureboot
   }
+
+  talos_machine_config_patches = [
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "KubeFlannelCNIConfig"
+      "$patch"   = "delete"
+    }),
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "KubeletConfig"
+      extraArgs = {
+        "rotate-server-certificates" = "true"
+      }
+    }),
+  ]
+
+  talos_controlplane_config_patches = [
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "KubeProxyConfig"
+      enabled    = false
+    }),
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "KubeTalosAPIAccessConfig"
+      allowedRoles = [
+        "os:etcd:backup",
+      ]
+      allowedKubernetesNamespaces = [
+        "talos-backup",
+      ]
+    }),
+  ]
 
   #
   # ==========================================================================
@@ -77,9 +97,10 @@ locals {
   #
 
   talos_controlplane_defaults = {
-    cores     = 4
-    memory    = 8192
-    disk_size = 40
+    cores              = 4
+    memory             = 8192
+    disk_size          = 40
+    longhorn_disk_size = 40
   }
 
   #
@@ -101,7 +122,7 @@ locals {
   #
 
   talos_proxmox_nodes = [
-    "pve", # add Proxmox node name
+    "pve",
   ]
 
   #
@@ -119,9 +140,10 @@ locals {
         index % length(local.talos_proxmox_nodes)
       ]
 
-      cores     = local.talos_controlplane_defaults.cores
-      memory    = local.talos_controlplane_defaults.memory
-      disk_size = local.talos_controlplane_defaults.disk_size
+      cores              = local.talos_controlplane_defaults.cores
+      memory             = local.talos_controlplane_defaults.memory
+      disk_size          = local.talos_controlplane_defaults.disk_size
+      longhorn_disk_size = local.talos_controlplane_defaults.longhorn_disk_size
 
       mac_address = null
 
@@ -155,6 +177,8 @@ locals {
       labels = {
         nodegroup = "general"
       }
+
+      longhorn_disk_size = 40
     }
   }
 }
