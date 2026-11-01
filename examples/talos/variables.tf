@@ -1,22 +1,3 @@
-variable "talos_schematic_id" {
-  description = "Talos Image Factory schematic ID."
-
-  type = string
-}
-
-variable "talos_iso_url" {
-  description = "Talos Image Factory ISO URL."
-
-  type = string
-}
-
-variable "talos_iso_checksum" {
-  description = "Optional SHA-512 checksum of the Talos ISO."
-
-  type    = string
-  default = null
-}
-
 variable "proxmox_endpoint" {
   description = "Proxmox endpoint URL."
 
@@ -25,6 +6,12 @@ variable "proxmox_endpoint" {
 
 variable "proxmox_api_token" {
   description = "Proxmox API token."
+
+  type = string
+}
+
+variable "talos_vip" {
+  description = "Reserved Layer-2 virtual IP for the Talos and Kubernetes API endpoints."
 
   type = string
 }

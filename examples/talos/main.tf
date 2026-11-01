@@ -9,4 +9,7 @@ module "talos" {
   proxmox = local.talos_proxmox
 
   talos_image = local.talos_image
+
+  machine_config_patches      = local.talos_machine_config_patches
+  controlplane_config_patches = local.talos_controlplane_config_patches
 }

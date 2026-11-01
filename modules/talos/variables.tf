@@ -7,9 +7,10 @@ variable "controlplanes" {
 
     mac_address = optional(string)
 
-    cores     = optional(number, 2)
-    memory    = optional(number, 4096)
-    disk_size = optional(number, 32)
+    cores              = optional(number, 2)
+    memory             = optional(number, 4096)
+    disk_size          = optional(number, 32)
+    longhorn_disk_size = optional(number)
 
     labels = optional(map(string), {})
   }))
@@ -17,10 +18,14 @@ variable "controlplanes" {
   validation {
     condition = (
       length(var.controlplanes) >= 3 &&
-      length(var.controlplanes) % 2 == 1
+      length(var.controlplanes) % 2 == 1 &&
+      alltrue([
+        for controlplane in values(var.controlplanes) :
+        controlplane.longhorn_disk_size == null || controlplane.longhorn_disk_size > 0
+      ])
     )
 
-    error_message = "controlplanes must contain an odd number of nodes, with at least 3 nodes."
+    error_message = "controlplanes must contain an odd number of nodes, with at least 3 nodes; longhorn_disk_size must be greater than zero when set."
   }
 }
 
@@ -33,14 +38,24 @@ variable "workers" {
 
     mac_address = optional(string)
 
-    cores     = optional(number, 4)
-    memory    = optional(number, 8192)
-    disk_size = optional(number, 64)
+    cores              = optional(number, 4)
+    memory             = optional(number, 8192)
+    disk_size          = optional(number, 64)
+    longhorn_disk_size = optional(number)
 
     labels = optional(map(string), {})
   }))
 
   default = {}
+
+  validation {
+    condition = alltrue([
+      for worker in values(var.workers) :
+      worker.longhorn_disk_size == null || worker.longhorn_disk_size > 0
+    ])
+
+    error_message = "longhorn_disk_size must be greater than zero when set."
+  }
 }
 
 variable "cluster" {

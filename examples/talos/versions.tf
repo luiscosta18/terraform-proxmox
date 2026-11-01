@@ -1,14 +1,14 @@
 terraform {
-  required_version = "~> 1.16.0"
+  required_version = "~> 1.17.0"
 
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.115"
+      version = "~> 0.119.0"
     }
     talos = {
       source  = "siderolabs/talos"
-      version = "~> 0.12"
+      version = "~> 0.12.0"
     }
   }
 }

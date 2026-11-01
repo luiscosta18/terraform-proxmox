@@ -5,44 +5,22 @@
 #
 
 locals {
-  talos_version_parts = split(".", trimprefix(var.cluster.talos_version, "v"))
+  talos_install_config_patch = yamlencode({
+    apiVersion = "v1alpha1"
+    kind       = "UnattendedInstallConfig"
 
-  # Talos 1.14 moved these fields into separate configuration documents.
-  talos_uses_multidoc_config = (
-    tonumber(local.talos_version_parts[0]) > 1 ||
-    (
-      tonumber(local.talos_version_parts[0]) == 1 &&
-      tonumber(local.talos_version_parts[1]) >= 14
-    )
-  )
+    installer = {
+      image = var.talos_image.installer_url
+    }
 
-  talos_install_config_patch = (
-    local.talos_uses_multidoc_config
-    ? yamlencode({
-      apiVersion = "v1alpha1"
-      kind       = "UnattendedInstallConfig"
-
-      installer = {
-        image = var.talos_image.installer_url
+    provisioning = {
+      diskSelector = {
+        match = "disk.dev_path == \"/dev/sda\""
       }
 
-      provisioning = {
-        diskSelector = {
-          match = "disk.dev_path == \"/dev/sda\""
-        }
-
-        wipe = false
-      }
-    })
-    : yamlencode({
-      machine = {
-        install = {
-          disk  = "/dev/sda"
-          image = var.talos_image.installer_url
-        }
-      }
-    })
-  )
+      wipe = false
+    }
+  })
 
   #
   # Proxmox guest-agent addresses are returned grouped by interface.
@@ -132,6 +110,11 @@ locals {
 
 resource "talos_machine_secrets" "this" {
   talos_version = var.cluster.talos_version
+
+  lifecycle {
+    # Machine secrets establish the cluster identity and must not rotate during an OS upgrade.
+    ignore_changes = [talos_version]
+  }
 }
 
 #
@@ -156,6 +139,10 @@ resource "proxmox_download_file" "talos_iso" {
   file_name = "talos-${var.cluster.talos_version}-amd64.iso"
 
   overwrite = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 #
@@ -192,8 +179,9 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
   }
 
   efi_disk {
-    datastore_id = var.proxmox.disk_datastore
-    type         = "4m"
+    datastore_id      = var.proxmox.disk_datastore
+    type              = "4m"
+    pre_enrolled_keys = true
   }
 
   scsi_hardware = "virtio-scsi-pci"
@@ -203,6 +191,18 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
     interface    = "scsi0"
     size         = each.value.disk_size
     discard      = "on"
+  }
+
+  dynamic "disk" {
+    for_each = each.value.longhorn_disk_size == null ? [] : [each.value.longhorn_disk_size]
+
+    content {
+      datastore_id = var.proxmox.disk_datastore
+      interface    = "scsi1"
+      size         = disk.value
+      discard      = "on"
+      ssd          = true
+    }
   }
 
   cdrom {
@@ -250,6 +250,11 @@ resource "proxmox_virtual_environment_vm" "controlplane" {
     "os-talos",
     "role-controlplane",
   ]
+
+  lifecycle {
+    # Preserve the existing EFI variables disk during routine VM updates.
+    ignore_changes = [efi_disk[0].pre_enrolled_keys]
+  }
 }
 
 #
@@ -286,8 +291,9 @@ resource "proxmox_virtual_environment_vm" "worker" {
   }
 
   efi_disk {
-    datastore_id = var.proxmox.disk_datastore
-    type         = "4m"
+    datastore_id      = var.proxmox.disk_datastore
+    type              = "4m"
+    pre_enrolled_keys = true
   }
 
   scsi_hardware = "virtio-scsi-pci"
@@ -297,6 +303,18 @@ resource "proxmox_virtual_environment_vm" "worker" {
     interface    = "scsi0"
     size         = each.value.disk_size
     discard      = "on"
+  }
+
+  dynamic "disk" {
+    for_each = each.value.longhorn_disk_size == null ? [] : [each.value.longhorn_disk_size]
+
+    content {
+      datastore_id = var.proxmox.disk_datastore
+      interface    = "scsi1"
+      size         = disk.value
+      discard      = "on"
+      ssd          = true
+    }
   }
 
   cdrom {
@@ -344,6 +362,11 @@ resource "proxmox_virtual_environment_vm" "worker" {
     "os-talos",
     "role-worker",
   ]
+
+  lifecycle {
+    # Preserve the existing EFI variables disk during routine VM updates.
+    ignore_changes = [efi_disk[0].pre_enrolled_keys]
+  }
 }
 
 #
@@ -397,20 +420,26 @@ data "talos_machine_configuration" "controlplane" {
         }
       }),
       local.talos_install_config_patch,
-      (
-        local.talos_uses_multidoc_config
-        ? yamlencode({
-          apiVersion = "v1alpha1"
-          kind       = "KubeNodeConfig"
-          labels     = each.value.labels
-        })
-        : yamlencode({
-          machine = {
-            nodeLabels = each.value.labels
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "KubeNodeConfig"
+        labels     = each.value.labels
+      }),
+    ],
+    each.value.longhorn_disk_size == null ? [] : [
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "UserVolumeConfig"
+        name       = "longhorn"
+        provisioning = {
+          diskSelector = {
+            match = "disk.dev_path == \"/dev/sdb\""
           }
-        })
-      ),
-    ]
+          grow    = false
+          maxSize = "${each.value.longhorn_disk_size}GB"
+        }
+      }),
+    ],
   )
 }
 
@@ -456,20 +485,26 @@ data "talos_machine_configuration" "worker" {
         }
       }),
       local.talos_install_config_patch,
-      (
-        local.talos_uses_multidoc_config
-        ? yamlencode({
-          apiVersion = "v1alpha1"
-          kind       = "KubeNodeConfig"
-          labels     = each.value.labels
-        })
-        : yamlencode({
-          machine = {
-            nodeLabels = each.value.labels
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "KubeNodeConfig"
+        labels     = each.value.labels
+      }),
+    ],
+    each.value.longhorn_disk_size == null ? [] : [
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "UserVolumeConfig"
+        name       = "longhorn"
+        provisioning = {
+          diskSelector = {
+            match = "disk.dev_path == \"/dev/sdb\""
           }
-        })
-      ),
-    ]
+          grow    = false
+          maxSize = "${each.value.longhorn_disk_size}GB"
+        }
+      }),
+    ],
   )
 }
 
