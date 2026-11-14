@@ -6,37 +6,38 @@ locals {
 
       node_name = "pve"
 
-      cores   = 2
-      sockets = 1
-      memory  = 4096
+      cpu = {
+        cores   = 2
+        sockets = 1
+      }
+
+      memory = 4096
 
       machine = "q35"
       bios    = "seabios"
 
       operating_system_type = "l26"
 
-      storage = "local-lvm"
-      disk_gb = 32
+      image = {
+        # This datastore needs "Import" enabled.
+        datastore_id = "local"
+        url          = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+      }
 
-      # Ubuntu cloud image is downloaded here.
-      #
-      # This datastore needs "Import" enabled.
-      image_datastore_id = "local"
-
-      image_url = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+      disk = {
+        datastore_id = "local-lvm"
+        size         = 32
+      }
 
       cloud_init = {
         enabled = true
 
-        # Cloud-init YAML snippet is stored here.
-        #
-        # This datastore needs "Snippets" enabled.
-        datastore_id = "local"
+        datastore_id         = "local-lvm"
+        snippet_datastore_id = "local"
 
         user = "ubuntu"
 
-        ssh_public_key = var.ssh_public_key
-
+        ssh_keys = [var.ssh_public_key]
       }
 
       networks = [

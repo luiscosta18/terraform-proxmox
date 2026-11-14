@@ -40,7 +40,7 @@ locals {
 
         user = "ubuntu"
 
-        ssh_public_key = var.ssh_public_key
+        ssh_keys = [var.ssh_public_key]
       }
 
       networks = [
