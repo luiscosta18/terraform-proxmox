@@ -3,8 +3,8 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.16.0 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.113 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.9 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.122.0 |
 
 ## Providers
 

@@ -4,13 +4,13 @@ module "api_key" {
   api_key = {
     user_id               = var.api_key_user_id
     token_name            = var.api_key_token_name
-    comment               = "Terraform VM management API token"
+    comment               = "OpenTofu VM management API token"
     privileges_separation = false
   }
 
   group = {
     group_id = var.api_key_group_id
-    comment  = "Terraform permissions to manage VMs, disks, and VM properties"
+    comment  = "OpenTofu permissions to manage VMs, disks, and VM properties"
   }
 
   permission = {

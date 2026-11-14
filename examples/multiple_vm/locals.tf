@@ -4,7 +4,7 @@ locals {
     format("%s%02d", var.vm_name_prefix, index + 1) => {
       name = format("%s%02d", var.vm_name_prefix, index + 1)
 
-      description = "Managed by terraform"
+      description = "Managed by OpenTofu"
 
       node_name = "pve"
 

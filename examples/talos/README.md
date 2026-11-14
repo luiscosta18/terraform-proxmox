@@ -3,8 +3,8 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.17.0 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.119.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.9 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.122.0 |
 | <a name="requirement_talos"></a> [talos](#requirement\_talos) | ~> 0.12.0 |
 
 ## Providers
@@ -47,13 +47,13 @@
 
 Copy `terraform.tfvars.example` to `terraform.tfvars` and set the Proxmox
 endpoint and reserved Layer-2 VIP. The VIP must not be inside the DHCP pool.
-Set `proxmox_api_token` using `TF_VAR_proxmox_api_token` or another Terraform
+Set `proxmox_api_token` using `TF_VAR_proxmox_api_token` or another OpenTofu
 input mechanism. Local `.tfvars` files are ignored by Git; do not commit
 credentials or machine-specific values.
 
 ## [Talos Linux Image Factory](https://factory.talos.dev/)
 
-Terraform creates a schematic automatically for Talos v1.14.5,
+OpenTofu creates a schematic automatically for Talos v1.14.6,
 including the official `iscsi-tools`, `util-linux-tools`, and `qemu-guest-agent`
 extensions required by Longhorn and the Proxmox guest agent. It then retrieves
 the Secure Boot ISO and installer URLs from Image Factory; no schematic ID or
@@ -78,7 +78,7 @@ The [Talos default-hardening guide](https://docs.siderolabs.com/talos/v1.14/secu
 also describes security controls Talos enables by default.
 
 Metrics Server and kube-state-metrics are intentionally not installed by this
-Terraform example; install them after Cilium.
+OpenTofu example; install them after Cilium.
 
 ## Longhorn storage
 
@@ -107,7 +107,7 @@ applying; the Talos volume selector intentionally targets that disk.
 The control-plane configuration allows the `os:etcd:backup` Talos API role
 only to pods in the `talos-backup` namespace. This least-privilege
 `KubeTalosAPIAccessConfig` is applied with the other control-plane patches.
-After applying Terraform, install the official backup CronJob and configure
+After applying OpenTofu, install the official backup CronJob and configure
 its S3 credentials and age encryption key using the
 [`k8s/talos-backup` instructions](https://github.com/luiscosta18/k8s/tree/main/talos-backup).
 
@@ -116,7 +116,7 @@ its S3 credentials and age encryption key using the
 Talos includes secure defaults such as an immutable OS and no SSH. This example
 uses Secure Boot assets and does not disable Proxmox TLS certificate
 verification. Restrict access to Talos API TCP/50000 and Kubernetes API
-TCP/6443 with your Proxmox/network firewalls. Terraform state contains Talos
+TCP/6443 with your Proxmox/network firewalls. OpenTofu state contains Talos
 cluster secrets and sensitive outputs: keep it private, encrypted at rest, and
 access-controlled. Review the [Talos security checklist](https://docs.siderolabs.com/talos/v1.14/security/talos-security-checklist)
 and [default hardening guide](https://docs.siderolabs.com/talos/v1.14/security/talos-default-hardening-and-cis-compliance)
@@ -125,9 +125,9 @@ for production use.
 ## Get talosconfig and kubeconfig
 
 ```bash
-terraform output -raw kubeconfig > ~/.kube/config
-terraform output -raw talosconfig > ./talosconfig
-terraform output -raw cluster_endpoint
+tofu output -raw kubeconfig > ~/.kube/config
+tofu output -raw talosconfig > ./talosconfig
+tofu output -raw cluster_endpoint
 ```
 
 ## Talosctl - Dashboard + Health
@@ -151,11 +151,11 @@ sudo mv talosctl /usr/local/bin/talosctl
 ```
 
 ```bash
-terraform output -raw talos_installer_image
+tofu output -raw talos_installer_image
 
 talosctl upgrade \
   --nodes <node_ip> \
-  --image "$(terraform output -raw talos_installer_image)"
+  --image "$(tofu output -raw talos_installer_image)"
 ```
 
 ```bash
