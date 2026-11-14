@@ -4,6 +4,7 @@ Reusable OpenTofu modules for provisioning and managing virtual machines on [Pro
 
 Use OpenTofu 1.13.9 or newer; the repository pins its CI version in
 `.opentofu-version`.
+Configuration files use the `.tofu` extension to make the OpenTofu runtime explicit.
 
 ## Usage
 
