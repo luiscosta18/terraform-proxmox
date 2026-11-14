@@ -3,7 +3,7 @@ variable "vm" {
 
   type = object({
     name        = string
-    description = optional(string, "Managed by Terraform")
+    description = optional(string, "Managed by OpenTofu")
 
     node_name = string
     vmid      = optional(number)

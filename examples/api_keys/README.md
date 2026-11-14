@@ -9,16 +9,16 @@ The module does not manage user membership. Because the example uses
 `privileges_separation = false`, use a dedicated Proxmox user with no other
 privileges; the token inherits that user's permissions.
 
-The provider is pinned to `bpg/proxmox` `~> 0.113`.
+The provider is pinned to `bpg/proxmox` `~> 0.122.0`.
 
 ```bash
-terraform init
-terraform apply
-terraform output -raw api_key_value
+tofu init
+tofu apply
+tofu output -raw api_key_value
 ```
 
 The token value is only returned when the token is created. Store it securely
-and pass it to VM-management Terraform configurations as:
+and pass it to VM-management OpenTofu configurations as:
 
 ```text
 terraform@pve!terraform-vm-management=<token-value>
@@ -29,8 +29,8 @@ terraform@pve!terraform-vm-management=<token-value>
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.16 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.113 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.9 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.122.0 |
 
 ## Providers
 

@@ -20,12 +20,12 @@ module "automation_api_key" {
   api_key = {
     user_id     = "terraform@pve"
     token_name  = "automation"
-    comment     = "Terraform automation"
+    comment     = "OpenTofu automation"
   }
 
   group = {
     group_id = "terraform-automation"
-    comment  = "Terraform automation permissions"
+    comment  = "OpenTofu automation permissions"
   }
 
   permission = {
@@ -65,14 +65,14 @@ module "automation_api_key" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.116.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.9 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.122.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | 0.116.0 |
+| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | 0.122.0 |
 
 ## Modules
 

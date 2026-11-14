@@ -1,6 +1,9 @@
-# Terraform Proxmox
+# OpenTofu Proxmox
 
-Reusable Terraform modules for provisioning and managing virtual machines on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment) with the [bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox/latest) provider, including infrastructure for [Talos Linux](https://www.talos.dev/) Kubernetes clusters managed with the [siderolabs/talos](https://registry.terraform.io/providers/siderolabs/talos/latest) provider.
+Reusable OpenTofu modules for provisioning and managing virtual machines on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment) with the [bpg/proxmox](https://registry.terraform.io/providers/bpg/proxmox/latest) provider, including infrastructure for [Talos Linux](https://www.talos.dev/) Kubernetes clusters managed with the [siderolabs/talos](https://registry.terraform.io/providers/siderolabs/talos/latest) provider.
+
+Use OpenTofu 1.13.9 or newer; the repository pins its CI version in
+`.opentofu-version`.
 
 ## Usage
 

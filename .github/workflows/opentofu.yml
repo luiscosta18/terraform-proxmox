@@ -1,0 +1,38 @@
+name: OpenTofu
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  opentofu:
+    name: OpenTofu checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version_file: .opentofu-version
+          tofu_wrapper: false
+
+      - name: OpenTofu Init and Validate
+        run: |
+          set -euo pipefail
+
+          for dir in modules/* examples/*; do
+            [ -f "$dir/versions.tf" ] || continue
+            echo "::group::OpenTofu validate: $dir"
+            tofu -chdir="$dir" init -backend=false -input=false
+            tofu -chdir="$dir" validate
+            echo "::endgroup::"
+          done

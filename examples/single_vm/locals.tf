@@ -2,7 +2,7 @@ locals {
   vm_map = {
     ubuntu01 = {
       name        = "ubuntu01"
-      description = "Managed by terraform"
+      description = "Managed by OpenTofu"
 
       node_name = "pve"
 

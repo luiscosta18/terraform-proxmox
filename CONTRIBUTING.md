@@ -5,7 +5,7 @@ Contribution guide for the `terraform-proxmox` project.
 ## Goals
 
 - Keep modules small, reusable, and testable.
-- Follow Terraform module best practices.
+- Follow OpenTofu module best practices.
 - Keep provider configuration outside reusable modules.
 - Keep resources configurable through module inputs.
 - Maintain clear documentation and examples.
@@ -19,6 +19,10 @@ Contribution guide for the `terraform-proxmox` project.
 4. Update documentation when changing module behavior.
 5. Use Conventional Commit messages for user-facing changes; release notes are generated from them.
 6. Run the required checks locally before opening a PR.
+
+Use the OpenTofu version in `.opentofu-version`. Run
+`tofu fmt -check -recursive`, then initialize and validate changed roots with
+`tofu init -backend=false` and `tofu validate`.
 
 ## Commit Messages and Releases
 
