@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
 
           for dir in modules/* examples/*; do
-            [ -f "$dir/versions.tf" ] || continue
+            [ -f "$dir/versions.tofu" ] || continue
             echo "::group::OpenTofu validate: $dir"
             tofu -chdir="$dir" init -backend=false -input=false
             tofu -chdir="$dir" validate
