@@ -48,3 +48,51 @@ Always write patches with `yamlencode()` and pass them as `list(string)`.
 **Example topology** — `examples/talos/locals.tofu` encodes the homelab cluster: 3 control-planes + 2 workers, all 4 cores / 8192 MB / 40 GB OS disk / 40 GB Longhorn disk, Talos `v1.14.6`, Kubernetes `1.37.2`, single Proxmox node `pve`, datastores `local` / `local-lvm`, bridge `vmbr0`. VMIDs are auto-assigned by Proxmox. Global patches: delete Flannel CNI, enable kubelet `rotate-server-certificates`. Control-plane patches: disable kube-proxy, grant `os:etcd:backup` to namespace `talos-backup`.
 
 **Gitignored** — `*.tfvars` (endpoint, token, VIP) and `examples/talos/talosconfig` are never committed. `terraform.tfstate` in `examples/talos/` is committed intentionally (no remote backend). Copy `terraform.tfvars.example` → `terraform.tfvars` and fill in real values before `tofu plan`.
+
+## Upgrading Talos and Kubernetes
+
+### Talos OS upgrade
+
+Bump `talos_version` in `examples/talos/locals.tofu`. Run `tofu apply` — this regenerates the Image Factory schematic and updates `talos_installer_image` in state. The existing nodes are **not** automatically rebooted; you must drive the rolling upgrade with `talosctl`:
+
+```bash
+# 1. Install the matching talosctl client
+curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v<talos_version>/talosctl-linux-amd64
+chmod +x talosctl && sudo mv talosctl /usr/local/bin/talosctl
+
+# 2. Get the new installer image from Terraform output
+export TALOSCONFIG="$PWD/examples/talos/talosconfig"
+IMAGE="$(cd examples/talos && tofu output -raw talos_installer_image)"
+
+# 3. Upgrade workers first, then control-planes one at a time
+# Replace IPs with current DHCP addresses from: talosctl get members
+talosctl upgrade -n <worker_ip>       -e <vip_or_cp_ip> --image "$IMAGE" --wait
+talosctl upgrade -n <controlplane_ip> -e <vip_or_cp_ip> --image "$IMAGE" --wait
+```
+
+Always upgrade `talosctl` to the same version as the target OS before running
+`talosctl upgrade`. The installer image is a `metal-installer-secureboot` image
+produced by Image Factory — never use a plain `ghcr.io/siderolabs/installer` URL.
+
+### Kubernetes upgrade
+
+Bump `kubernetes_version` in `examples/talos/locals.tofu`. Run `tofu apply` to
+update generated machine configs, then drive the rolling upgrade with `talosctl`:
+
+```bash
+talosctl upgrade-k8s --to <kubernetes_version> -n <any_controlplane_ip> -e <vip_or_cp_ip>
+```
+
+`upgrade-k8s` drains nodes and updates the control-plane components and kubelet
+sequentially. Run it from a single control-plane node; it handles the rest.
+
+### After any upgrade
+
+Verify all members are on the expected version:
+
+```bash
+talosctl version        -e <vip_or_cp_ip>
+talosctl get members    -e <vip_or_cp_ip>
+talosctl etcd status    -e <vip_or_cp_ip>
+kubectl get nodes -o wide
+```
