@@ -134,8 +134,6 @@ locals {
   talos_controlplanes = {
     for index in range(local.talos_controlplane_count) :
     format("%02d", index + 1) => {
-      vmid = 500 + index
-
       node_name = local.talos_proxmox_nodes[
         index % length(local.talos_proxmox_nodes)
       ]
@@ -144,8 +142,6 @@ locals {
       memory             = local.talos_controlplane_defaults.memory
       disk_size          = local.talos_controlplane_defaults.disk_size
       longhorn_disk_size = local.talos_controlplane_defaults.longhorn_disk_size
-
-      mac_address = null
 
       labels = {
         "node-role.kubernetes.io/control-plane" = ""
@@ -162,8 +158,6 @@ locals {
   talos_workers = {
     for index in range(local.talos_worker_count) :
     format("%02d", index + 1) => {
-      vmid = 510 + index
-
       node_name = local.talos_proxmox_nodes[
         index % length(local.talos_proxmox_nodes)
       ]
@@ -171,8 +165,6 @@ locals {
       cores     = local.talos_worker_defaults.cores
       memory    = local.talos_worker_defaults.memory
       disk_size = local.talos_worker_defaults.disk_size
-
-      mac_address = null
 
       labels = {
         nodegroup = "general"
