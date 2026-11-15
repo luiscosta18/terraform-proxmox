@@ -2,7 +2,7 @@ variable "controlplanes" {
   description = "Talos control-plane VM inventory."
 
   type = map(object({
-    vmid      = number
+    vmid      = optional(number)
     node_name = string
 
     mac_address = optional(string)
@@ -33,7 +33,7 @@ variable "workers" {
   description = "Talos worker VM inventory."
 
   type = map(object({
-    vmid      = number
+    vmid      = optional(number)
     node_name = string
 
     mac_address = optional(string)
